@@ -1,0 +1,18 @@
+load 15
+move 12 -4
+load 10
+home
+dump
+move -1 -1
+load 25
+switch
+badcommand
+load 12
+move 6 7
+dump
+load 5
+switch
+move 4 4
+switch
+dump
+quit

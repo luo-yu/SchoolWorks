@@ -1,0 +1,118 @@
+Enter file name:  TestFile.txt
+Command: load 3 ==> 3 tons were loaded
+Truck 1 state: (0, 0), 3 tons
+Command: move -3 -4 ==>  truck moved to (-3, -4)
+Truck 1 state: (-3, -4), 3 tons
+Command: load 7 ==> 7 tons were loaded
+Truck 1 state: (-3, -4), 10 tons
+Command: move 10 10 ==>  truck moved to (10, 10)
+Truck 1 state: (10, 10), 10 tons
+Command: load 15 ==> 10 tons were loaded
+Truck 1 state: (10, 10), 20 tons
+Command: move 3 4 ==>  truck moved to (3, 4)
+Truck 1 state: (3, 4), 20 tons
+Command: dump ==> 20 tons were dumped
+Truck 1 state: (3, 4), 0 tons
+Command: home ==>  truck moved to (0, 0)
+Truck 1 state: (0, 0), 0 tons
+Command: load 18 ==> 18 tons were loaded
+Truck 1 state: (0, 0), 18 tons
+Command: switch ==> truck 2 is now active
+Truck 2 state: (0, 0), 0 tons
+Command: move -10 -10 ==>  truck moved to (-10, -10)
+Truck 2 state: (-10, -10), 0 tons
+Command: dump ==> 0 tons were dumped
+Truck 2 state: (-10, -10), 0 tons
+Command: load 12 ==> 10 tons were loaded
+Truck 2 state: (-10, -10), 10 tons
+Command: home ==>  truck moved to (0, 0)
+Truck 2 state: (0, 0), 10 tons
+Command: dump ==> 10 tons were dumped
+Truck 2 state: (0, 0), 0 tons
+Command: error ==> invalid command
+Truck 2 state: (0, 0), 0 tons
+Command: switch ==> truck 1 is now active
+Truck 1 state: (0, 0), 18 tons
+Command: switch ==> truck 2 is now active
+Truck 2 state: (0, 0), 0 tons
+Command: move -8 3 ==>  truck moved to (-8, 3)
+Truck 2 state: (-8, 3), 0 tons
+Command: load 4 ==> 4 tons were loaded
+Truck 2 state: (-8, 3), 4 tons
+Command: switch ==> truck 1 is now active
+Truck 1 state: (0, 0), 18 tons
+Command: load 10 ==> 2 tons were loaded
+Truck 1 state: (0, 0), 20 tons
+Command: move 1 1 ==>  truck moved to (1, 1)
+Truck 1 state: (1, 1), 20 tons
+Command: switch ==> truck 2 is now active
+Truck 2 state: (-8, 3), 4 tons
+Command: load 16 ==> 6 tons were loaded
+Truck 2 state: (-8, 3), 10 tons
+Command: move -2 3 ==>  truck moved to (-2, 3)
+Truck 2 state: (-2, 3), 10 tons
+Command: quit ==> command file finished
+Truck 2 state: (-2, 3), 10 tons
+****Truck 1 summary****
+Truck 1 state: (1, 1), 20 tons
+Total miles travelled = 39
+Total tons delivered = 20
+****Truck 2 summary****
+Truck 2 state: (-2, 3), 10 tons
+Total miles travelled = 42
+Total tons delivered = 10
+
+
+Enter file name:  TestFileNoSwitch.txt
+Command: load 3 ==> 3 tons were loaded
+Truck 1 state: (0, 0), 3 tons
+Command: move -3 -4 ==>  truck moved to (-3, -4)
+Truck 1 state: (-3, -4), 3 tons
+Command: load 7 ==> 7 tons were loaded
+Truck 1 state: (-3, -4), 10 tons
+Command: move 10 10 ==>  truck moved to (10, 10)
+Truck 1 state: (10, 10), 10 tons
+Command: load 15 ==> 10 tons were loaded
+Truck 1 state: (10, 10), 20 tons
+Command: move 3 4 ==>  truck moved to (3, 4)
+Truck 1 state: (3, 4), 20 tons
+Command: dump ==> 20 tons were dumped
+Truck 1 state: (3, 4), 0 tons
+Command: home ==>  truck moved to (0, 0)
+Truck 1 state: (0, 0), 0 tons
+Command: load 18 ==> 18 tons were loaded
+Truck 1 state: (0, 0), 18 tons
+Command: move -10 -10 ==>  truck moved to (-10, -10)
+Truck 1 state: (-10, -10), 18 tons
+Command: dump ==> 18 tons were dumped
+Truck 1 state: (-10, -10), 0 tons
+Command: load 12 ==> 12 tons were loaded
+Truck 1 state: (-10, -10), 12 tons
+Command: home ==>  truck moved to (0, 0)
+Truck 1 state: (0, 0), 12 tons
+Command: dump ==> 12 tons were dumped
+Truck 1 state: (0, 0), 0 tons
+Command: error ==> invalid command
+Truck 1 state: (0, 0), 0 tons
+Command: move -8 3 ==>  truck moved to (-8, 3)
+Truck 1 state: (-8, 3), 0 tons
+Command: load 4 ==> 4 tons were loaded
+Truck 1 state: (-8, 3), 4 tons
+Command: load 10 ==> 10 tons were loaded
+Truck 1 state: (-8, 3), 14 tons
+Command: move 1 1 ==>  truck moved to (1, 1)
+Truck 1 state: (1, 1), 14 tons
+Command: load 16 ==> 6 tons were loaded
+Truck 1 state: (1, 1), 20 tons
+Command: move -2 3 ==>  truck moved to (-2, 3)
+Truck 1 state: (-2, 3), 20 tons
+Command: quit ==> command file finished
+Truck 1 state: (-2, 3), 20 tons
+****Truck 1 summary****
+Truck 1 state: (-2, 3), 20 tons
+Total miles travelled = 86
+Total tons delivered = 50
+****Truck 2 summary****
+Truck 2 state: (0, 0), 0 tons
+Total miles travelled = 0
+Total tons delivered = 0

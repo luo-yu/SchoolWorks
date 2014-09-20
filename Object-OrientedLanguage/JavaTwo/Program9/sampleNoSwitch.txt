@@ -1,0 +1,34 @@
+Command: load 15 ==> 15 tons were loaded
+Truck state: (0, 0), 15 tons
+Command: move 12 -4 ==>  truck moved to (12, -4)
+Truck state: (12, -4), 15 tons
+Command: load 10 ==> 5 tons were loaded
+Truck state: (12, -4), 20 tons
+Command: home ==>  truck moved to (0, 0)
+Truck state: (0, 0), 20 tons
+Command: dump ==> 20 tons were dumped
+Truck state: (0, 0), 0 tons
+Command: move -1 -1 ==>  truck moved to (-1, -1)
+Truck state: (-1, -1), 0 tons
+Command: load 25 ==> 20 tons were loaded
+Truck state: (-1, -1), 20 tons
+Command: badcommand ==> invalid command
+Truck state: (-1, -1), 20 tons
+Command: load 12 ==> 0 tons were loaded
+Truck state: (-1, -1), 20 tons
+Command: move 6 7 ==>  truck moved to (6, 7)
+Truck state: (6, 7), 20 tons
+Command: dump ==> 20 tons were dumped
+Truck state: (6, 7), 0 tons
+Command: load 5 ==> 5 tons were loaded
+Truck state: (6, 7), 5 tons
+Command: move 4 4 ==>  truck moved to (4, 4)
+Truck state: (4, 4), 5 tons
+Command: dump ==> 5 tons were dumped
+Truck state: (4, 4), 0 tons
+Command: quit ==> command file finished
+Truck state: (4, 4), 0 tons
+****Truck summary****
+Truck 1 state: (4, 4), 0 tons
+Total miles travelled = 38
+Total tons delivered = 45

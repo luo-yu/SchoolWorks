@@ -1,0 +1,27 @@
+load 3
+move -3 -4
+load 7
+move 10 10
+load 15
+move 3 4
+dump
+home
+load 18
+switch
+move -10 -10
+dump
+load 12
+home
+dump
+error
+switch
+switch
+move -8 3
+load 4
+switch
+load 10
+move 1 1
+switch
+load 16
+move -2 3
+quit
