@@ -1,0 +1,35 @@
+  #!/usr/local/bin/tcsh
+  # run the script with two command line arguments
+  # >./lab3 cs216roster.txt option
+  # cs216roster.txt is the input file as first argument
+  # option allows you to make one of three choices
+  # if option is 1, output file will sort the roster in ascending order of students' ID
+  # if option is 2, output file will sort the roster in dictionary order of students' lastname
+  # if option is 3, output file will sort the roster in reverse dictionary order of students' firstname
+  # if option is other integer, no output file will be generated.
+  echo "Sort the roster in one of three orders:"
+  echo "1. ascending order of students' ID"
+  echo "2. dictionary order of students' lastname"
+  echo "3. reverse dictionary order of studetns' firstname"
+
+  #write your if statements to complete the shell script
+  #generate output file named ID_output for option=1
+  #generate output file named LastName_output for option=2
+  #generate output file named FirstName_output for option=3
+  #no output file is generated when option is not valid
+  if [ "$2" = "1" ]
+  then
+	sort -n cs216roster.txt -o ID_output
+	echo "Your choice is: 1. Please check the output file"
+ 
+  elif [ "$2" = "2" ]
+  then
+	sort -k 2 cs216roster.txt -o LastName_output
+	echo "Your choice is: 2. Please check the output file"
+  elif [ "$2" = "3" ]
+  then
+	sort -t , -r -k 2 cs216roster.txt -o FirstName_output
+	echo "Your choice is: 3. Please check the output file" 
+  else
+     echo "Your choice is invalid"
+  fi 

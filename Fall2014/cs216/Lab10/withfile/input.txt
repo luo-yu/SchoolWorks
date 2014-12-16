@@ -1,0 +1,6 @@
+circle 2.45
+square 50
+rectangle 17.53 6.8
+circle 9.8
+rectangle 88.2 53
+circle 50

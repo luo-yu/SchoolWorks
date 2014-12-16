@@ -1,0 +1,11 @@
+What is the difference between the output of the two programs?
+
+Lab6_1 was terminated after throwing an instance of ‘DivideByZero’. The exception handler (the class DividdByZero) handled the error.
+
+Lab6_2 has an exception throw by the code in the try-catch block, the programmer handled the error explicitly in the catch block
+
+The difference between Lab6_1 and Lab6_0 is that for Lab6_1, the throw statement will be executed only b==0, in Lab6_0, the throw statement will be executed no matter what number b is. 
+
+The difference between Lab6_2 and Lab6_0 is that for Lab6_2, the throw statement will be executed only b==0, and the programmer handled the error in a catch block, whereas in Lab6_0, the throw statement will be executed no matter what number b is.
+
+

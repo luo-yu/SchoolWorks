@@ -1,0 +1,14 @@
+10251388    Brown  Charlie CS
+10295098    Pooh  Winnie  EE
+10261821    Snowman  Olaf  CE
+10302340    Brown  Sally   CS
+10382149    Jean  Peggy   MA
+10618769    Potter Harry  EE
+10210023    Weasley Ronald  CS
+10383584    Granger Hermione  MA
+10640227    Weasley  Ginny  EE
+10086833    Rabbit Peter   CE
+10369018    Bunny Benjamin  MA
+10380441    Star Patrick  CS
+10299673    Sponge Bob   EE
+

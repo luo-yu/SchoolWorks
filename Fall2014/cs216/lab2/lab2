@@ -1,0 +1,7 @@
+#!/usr/local/bin/tcsh
+clear
+echo -n "It is currently: ";date
+echo -n "I am logged on as: ";who am i
+echo -n "This computer is called: ";hostname
+echo -n "I am currently in the directory: ";pwd
+echo "The user(s) currently logged on: ";who

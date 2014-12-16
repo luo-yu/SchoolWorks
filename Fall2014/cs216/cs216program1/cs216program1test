@@ -1,0 +1,41 @@
+#!/usr/local/bin/tcsh
+
+#display the contents of the file student.txt
+cat student.txt
+
+#display the contents of the file studentcourses.txt
+cat studentcourses.txt
+
+
+#execute cs216program1 with a student number that 
+#displays exactly one course the student is taking
+
+echo "Test 1"
+./cs216program1 10295098 
+echo "\n"
+#execute cs216program1 with a student number that displays
+#more than one courses the student is taking
+
+echo "Test 2"
+./cs216program1 10618769
+echo "\n"
+
+#execute cs216program1 with a student number that is not
+#in student.txt
+echo "Test 3"
+./cs216program1 12000000
+echo "\n"
+
+#excute cs216program1 with a student number that is not
+#taking any courses
+
+echo "Test 4"
+./cs216program1 10380441
+echo "\n"
+
+#excute cs216program1 when student.txt does not exist
+echo "Test 5"
+chmod u-r student.txt
+./cs216program1 10618769
+chmod u+r student.txt
+echo "\n"
