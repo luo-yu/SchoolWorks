@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>SpaceRacing</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>front</name>
+			<type>2</type>
+			<location>C:/Users/Lankford/Desktop/335proj/project/project/SpaceRacing/src/main/java/com/momchil_atanasov/data/front</location>
+		</link>
+	</linkedResources>
+</projectDescription>

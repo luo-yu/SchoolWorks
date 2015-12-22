@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="java.awt.Frame"/>
+<fullyQualifiedTypeName name="java.awt.BorderLayout"/>
+<fullyQualifiedTypeName name="com.jogamp.newt.event.WindowEvent"/>
+<fullyQualifiedTypeName name="com.jogamp.newt.event.WindowAdapter"/>
+<fullyQualifiedTypeName name="com.jogamp.opengl.util.Animator"/>
+<fullyQualifiedTypeName name="com.jogamp.opengl.GLCapabilities"/>
+<fullyQualifiedTypeName name="com.jogamp.opengl.awt.GLCanvas"/>
+<fullyQualifiedTypeName name="java.awt.event.WindowAdapter"/>
+<fullyQualifiedTypeName name="java.awt.event.WindowEvent"/>
+<fullyQualifiedTypeName name="com.jogamp.opengl.glu.GLUquadric"/>
+</qualifiedTypeNameHistroy>

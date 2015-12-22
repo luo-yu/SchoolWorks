@@ -1,0 +1,11 @@
+Group member: Yu Luo, Joey Williams
+
+
+Our upsh shell will able to do the following command
+upsh does not handle 'cd' with no arguments
+maximum of 16 background job is allowed
+
+loadpluggin works as follows:
+> loadpluggin ./<pluggin-file>  (include the extention)
+to execute a command
+><Command-Name>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move 5 elements to &apos;TESTR/src&apos;&#x0A;- Original project: &apos;TESTR&apos;&#x0A;- Destination element: &apos;TESTR/src&apos;&#x0A;- Original elements:&#x0A;     JoglEventListener.java&#x0A;     Ground.java&#x0A;     Skybox.java&#x0A;     Main.java&#x0A;     TextureLoader.java&#x0A;- Update references to refactored element" description="Move files" destination="/src" element1="JoglEventListener.java" element2="Ground.java" element3="Skybox.java" element4="Main.java" element5="TextureLoader.java" files="5" flags="589830" folders="0" id="org.eclipse.jdt.ui.move" policy="org.eclipse.jdt.ui.moveResources" qualified="false" references="true" stamp="1446573553518" units="0" version="1.0"/>
+</session>

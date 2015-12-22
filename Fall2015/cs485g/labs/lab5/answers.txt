@@ -1,0 +1,35 @@
+A. The fork() System Call
+a)
+ The parent ran first when we ran the program a.out.  
+b)
+Because the parent and the child are two different processes
+
+c)
+hello from child is printed out first 
+
+d) Because the variable x exists in two diferent processes, changes in one process will not 
+affect the value of the x in another
+
+
+B. Multiple Fork Calls
+2a) I think the output will be 
+1
+2
+4
+1
+2
+3
+2
+3
+3
+
+
+4a) No, i didn't predict it correctly
+
+4b)I didn't consider that the if(fork() ==0) will run in the parent  
+
+
+C. Starting Programs with exec
+
+
+

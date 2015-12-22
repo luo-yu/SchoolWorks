@@ -1,0 +1,5 @@
+/bin/ls
+/bin/cat
+/bin/wc
+/bin/sleep
+

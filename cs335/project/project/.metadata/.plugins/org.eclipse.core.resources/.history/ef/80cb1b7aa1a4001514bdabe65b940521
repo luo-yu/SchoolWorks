@@ -1,0 +1,1363 @@
+package SpaceRacing;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.text.MessageFormat;
+import java.util.Random;
+import java.io.FileNotFoundException;
+import java.util.Vector;
+import javax.imageio.ImageIO;
+import com.jogamp.opengl.*;
+import com.jogamp.opengl.fixedfunc.GLMatrixFunc;
+import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.glu.GLUquadric;
+import com.jogamp.opengl.util.awt.TextRenderer;
+import java.awt.Font; 
+//import com.sun.opengl.util.j2d.TextRenderer; 
+
+
+import objload.com.momchil_atanasov.data.front.error.WFException;
+import objload.com.momchil_atanasov.data.front.parser.OBJFace;
+import objload.com.momchil_atanasov.data.front.parser.OBJMesh;
+import objload.com.momchil_atanasov.data.front.parser.OBJModel;
+import objload.com.momchil_atanasov.data.front.parser.OBJObject;
+import objload.com.momchil_atanasov.data.front.parser.OBJParser;
+import objload.com.momchil_atanasov.data.front.parser.OBJVertex;
+
+
+public class JoglEventListener implements GLEventListener, KeyListener, MouseListener, MouseMotionListener {
+	private int windowWidth, windowHeight;
+	
+	private TextureLoader texture_loader = null;
+	private Skybox current_skybox = null;
+	private final float skybox_size = 1000.0f;
+	private boolean skybox_follow_camera = true;
+	private final String[] skybox_names = {
+		"ThickCloudsWater", "DarkStormy",
+		"FullMoon", "SunSet",
+		"CloudyLightRays", "TropicalSunnyDay"
+	};
+	// Making this larger will allocate more skybox textures to start, giving a
+	// super slow startup, but allowing you to switch between them quickly.
+	// Best to use a value of 1 for production code.
+	private final int skybox_max_textures = 1;
+	private Skybox[] skyboxes = new Skybox[ skybox_names.length ];
+	private boolean psychedelic_mode = false;
+	private int paper_cube_size = 1;
+	int texID[]  = new int[3];
+	
+	private float scene_eye_x = 0.0f;
+	private float scene_eye_y = 0.0f;
+	private float scene_eye_z = 0.0f;
+
+	private int mouse_x0 = 0;
+	private int mouse_y0 = 0;
+	
+	private int mouse_mode = 0;
+	
+	private final int MOUSE_MODE_NONE = 0;
+	private final int MOUSE_MODE_ROTATE = 1;
+	
+	
+	float[]shipVertices;
+	float[]shipFaces;
+	float move = 0;
+	 // Define camera variables
+    float pane = 0.0f, cameraSpeed = 0.0f, elevation = 0.0f;
+    // Set camera at (0, 0, -20)
+    float eyeX = 0.0f, eyeY = 3.0f, eyeZ = -6.0f;
+    // Set camera orientation
+    float cameraUpx = 0.0f, cameraUpy = 1.0f, cameraUpz = 0.0f;
+	float orthoX=40;
+	float mouseX0, mouseY0;
+	float stepDirections[] = new float[3];
+	float deltaX,deltaY, deltaZ = 0;
+	float forward,back,left,right,up,down = 0;
+	float userPos[] = {0,0,0}; 
+	boolean exitLeft, exitRight, exitTop, exitBott = false;
+	boolean thirdPerson = true;
+	int widthLast;
+	float stepSize = .01f;
+	int viewShip = 180;
+	int barrellroll, paneUp = 0;
+	float zLast;
+	int mySpeed = 5;
+
+	float[][] checkPts = {{-5,0,0}, {-8,0,20},{-30,10,100},{-60, 15, 150},{-100, 20, 200}}; //,{-150, 25, 250},{-200, 30, 300}};
+	boolean[] checkPtsPassed = {false,false,false,false,false}; //,false,false};
+
+	float[][] asteriodPos = {{200,10,100}, {100,10,100}} ;
+	float[] prevThird = {0,0,0};
+	boolean once = true;
+	
+	private boolean[] keys = new boolean[256];
+	GLUquadric quadric;
+	private GLU glu = new GLU();
+	
+	public void displayChanged( GLAutoDrawable gLDrawable, boolean modeChanged,
+			boolean deviceChanged) { }
+
+	@Override
+	public void init( GLAutoDrawable gLDrawable ) {
+		
+		GL2 gl = gLDrawable.getGL().getGL2();
+		//gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); 
+		//gl.glEnable( GL.GL_DEPTH_TEST );
+		//gl.glEnable( GL.GL_TEXTURE_2D );
+
+		
+		float temp = -10 / (orthoX/windowWidth);
+		float temp2 = -3 / (orthoX/windowWidth);
+		prevThird[0] = 0f;
+		prevThird[1] = temp2*(orthoX/windowWidth);
+		prevThird[2] = temp*(orthoX/windowWidth);
+		
+		quadric = glu.gluNewQuadric();
+		//glu.gluSphere(quadric, 2, 10, 15);
+		//glu.gluDeleteQuadric(quadric);
+		
+		
+		// Initialize the texture loader and skybox.
+		texture_loader = new TextureLoader( gl );
+		
+		for ( int i = 0; i < skybox_max_textures; ++i )
+			skyboxes[ i ] = new Skybox( texture_loader, skybox_names[ i ] );
+		
+		current_skybox = skyboxes[ 0 ];
+		/*
+		try {
+			gl.glGenTextures(texID.length, texID, 0);
+			//texture_loader.loadTexture(texID[0], "C:\\Users\\Judy\\Desktop\\cs335\\project\\skybox_textures\\grass.jpg");
+			//texture_loader.loadTexture(texID[1], "C:\\Users\\Judy\\Desktop\\cs335\\project\\skybox_textures\\asphalt.jpg");
+			texture_loader.loadTexture(texID[0], "C:\\Users\\Lankford\\Desktop\\335proj\\project\\skybox_textures\\grass.jpg");
+			texture_loader.loadTexture(texID[1], "C:\\Users\\Lankford\\Desktop\\335proj\\project\\skybox_textures\\asphalt.jpg");
+	} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		// Initialize the keys.
+		for ( int i = 0; i < keys.length; ++i )
+			keys[i] = false;
+		*/
+
+		gl.glMatrixMode( GLMatrixFunc.GL_MODELVIEW );
+		gl.glLoadIdentity();
+	}
+	
+	@Override
+	public void reshape( GLAutoDrawable gLDrawable, int x, int y, int width, int height ) {
+		windowWidth = width;
+		windowHeight = height > 0 ? height : 1;
+		
+		final GL2 gl = gLDrawable.getGL().getGL2();
+		
+		gl.glViewport( 0, 0, width, height );
+		gl.glMatrixMode( GLMatrixFunc.GL_PROJECTION );
+		gl.glLoadIdentity();
+		glu.gluPerspective( 60.0f, (float) windowWidth / windowHeight, 0.1f, skybox_size * (float) Math.sqrt( 3.0 ) / 2.0f );
+	}
+
+	@Override
+	public void display( GLAutoDrawable gLDrawable ) {
+		final GL2 gl = gLDrawable.getGL().getGL2();
+	
+		/*
+		 * TODO:
+		 * make gui available only in 3rd person
+		 * make collision detection for asteriods
+		 * make spaceship mode and first person mode: ie when first person, dont render the model of your spaceship
+		 * 
+		 */
+		
+		
+		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
+
+		/*
+		System.out.println("\n ortho:");
+		System.out.println(orthoX);
+		System.out.println("\n width:");
+		System.out.println(windowWidth);
+		*/
+
+		
+		
+		/*
+		if (widthLast != windowWidth && widthLast != 0){
+			gl.glTranslatef(0, 0, -temp*(orthoX/windowWidth));
+			//gl.glTranslatef(0, 0, temp*(orthoX/windowWidth));
+		}
+		*/
+		
+		//draw the spaceship
+		gl.glPushMatrix();
+			gl.glRotatef(viewShip, 0, 1, 0);
+			gl.glRotatef(paneUp, 1, 0, 0);
+			gl.glRotatef(barrellroll, 0, 0, 1);
+			drawSpaceShip(gl);
+			gl.glScalef(1.01f, 1.02f, 1.02f);
+			drawSpaceShip2(gl);
+		gl.glPopMatrix();
+		
+		//adjust 3rd person view according to screen size
+		float temp = -10 / (orthoX/windowWidth);
+		float temp2 = -3 / (orthoX/windowWidth);
+		if (thirdPerson == true && widthLast != windowWidth){
+			System.out.println("\n 3rd person");
+			System.out.println(thirdPerson);
+			
+			System.out.println("\n this should be -10:");
+			System.out.println(temp*(orthoX/windowWidth));
+
+			prevThird[0] = 0f;
+			prevThird[1] = temp2*(orthoX/windowWidth);
+			prevThird[2] = temp*(orthoX/windowWidth);
+			
+			gl.glTranslatef(0, temp2*(orthoX/windowWidth), temp*(orthoX/windowWidth));
+			widthLast = windowWidth;
+		}
+		if (thirdPerson == true && widthLast == windowWidth && once == true){
+			gl.glTranslatef(prevThird[0],prevThird[1],prevThird[2]);
+			once = false;
+		}
+		
+		
+		//if first person, dont display the ship in 3rd person
+		if (thirdPerson == false){
+			gl.glTranslatef(0, -temp2*(orthoX/windowWidth), -temp*(orthoX/windowWidth));
+			widthLast = windowWidth+1;
+			once = true;
+		}
+		
+		
+		//make modelview for surrounding objects
+		gl.glMatrixMode( GLMatrixFunc.GL_MODELVIEW ); //Modelview – places object geometry in the global, unprojected space
+		gl.glPushMatrix();
+
+		// Update the camera state.
+		//if the mouse has left the main screen, speed up the pane/elevation
+		if(exitLeft){
+			pane -= 1 ;
+			if (barrellroll > -30)
+				barrellroll-=1;
+		}
+		else if(exitRight){
+			pane += 1 ;
+			if (barrellroll < 30)
+				barrellroll+=1;
+		}
+		else if(exitTop){
+			elevation -= 1 ;
+			if (paneUp < 30)
+				paneUp+=1;
+		}
+		else if(exitBott){
+			elevation += 1 ;
+			if (paneUp == -31)
+				paneUp+=1;
+		}
+		else{
+			if (barrellroll > 0 && barrellroll != 0)
+				barrellroll--;
+			if (barrellroll < 0 && barrellroll != 0)
+				barrellroll++;
+		}
+    	if (pane > 359 && pane < 360)
+    		pane = 0;
+    	if (pane < 0)
+    		pane = 359;
+		
+		
+		//get the direction our spaceship will move
+		stepDirections = aimEye(gl, glu);
+		
+		/*
+		System.out.println("\n Eye at:");
+		System.out.println(userPos[0]);
+		System.out.println(userPos[1]);
+		System.out.println(userPos[2]);
+		
+		System.out.println("\n Looking at:");
+		System.out.println(scene_eye_x + scene_look_x);
+		System.out.println(scene_eye_y + scene_look_y);
+		System.out.println(scene_eye_z + scene_look_z);
+		*/
+		
+		
+		gl.glPushMatrix();
+		//skybox follows eye
+		if ( skybox_follow_camera )
+			gl.glTranslatef( scene_eye_x, scene_eye_y, scene_eye_z );
+		//stuff drawn here wont change with respect to WASD movement:
+		//draw skybox
+        gl.glEnable(GL.GL_TEXTURE_2D);
+		current_skybox.draw( gl, skybox_size );
+		gl.glDisable(GL.GL_TEXTURE_2D);
+
+		gl.glPopMatrix();
+		
+		
+		//MOVEMENT- START
+		float[] tmp;
+		if (forward != 0){ //if 'W'
+			tmp = takeStep(false);
+			gl.glTranslatef(userPos[0]-tmp[0],userPos[1]-tmp[1],userPos[2]-tmp[2]);
+			if (stepDirections[0] > 0 ){ //if positive x direction
+				userPos[0] -= tmp[0];
+				userPos[2] -= tmp[2];
+				if (stepDirections[1] < 0)
+					userPos[1] += tmp[1];
+				else
+					userPos[1] -= tmp[1];
+			}
+			else{
+				userPos[0] += tmp[0];
+				userPos[2] += tmp[2];
+				if (stepDirections[1] > 0)
+					userPos[1] -= tmp[1];
+				else
+					userPos[1] += tmp[1];
+			}
+			//forward = 0;
+		}
+		else if (back != 0){
+			tmp = takeStep(false);
+			gl.glTranslatef(userPos[0]+tmp[0], userPos[1],userPos[2]+tmp[2]);
+			if (stepDirections[0] > 0 ){
+				userPos[0] += tmp[0];
+				userPos[2] += tmp[2];
+			}
+			else{
+				userPos[0] -= tmp[0];
+				userPos[2] -= tmp[2];
+			}
+			back = 0;
+		}
+		else if (left != 0){
+			tmp = takeStep(true);
+			gl.glTranslatef(userPos[0]-tmp[0], userPos[1],userPos[2]-tmp[2]);
+			if (stepDirections[2] > 0 ){
+				userPos[0] -= tmp[0];
+				userPos[2] -= tmp[2];
+			}
+			else{
+				userPos[0] += tmp[0];
+				userPos[2] += tmp[2];
+			}
+			left = 0;
+		}
+		else if (right != 0){
+			tmp = takeStep(true);
+			gl.glTranslatef(userPos[0]+tmp[0], userPos[1],userPos[2]+tmp[2]);
+			if (stepDirections[2] < 0 ){
+				userPos[0] -= tmp[0];
+				userPos[2] -= tmp[2];
+			}
+			else{
+				userPos[0] += tmp[0];
+				userPos[2] += tmp[2];
+			}
+			right = 0;
+		}
+		else
+			gl.glTranslatef(userPos[0], userPos[1],userPos[2]);
+		//MOVEMENT- END
+		
+		
+		//user has now moved, draw stationary objs here (the scene):
+		//x,y,z = circle of track, how high up the checkpoints are, how far out the checkpoints are
+		for (int i = 0; i < checkPts.length;i++)
+			drawCheckPoint(gl, checkPts[i][0], checkPts[i][1], checkPts[i][2]);
+		
+		gl.glPushMatrix();
+	        
+	        //float sunColor[] = { 1f, 0.8f, 0.01f };
+	        //float asteriodColor[] = {0.36f ,0.25f ,0.20f};
+	        float asteriodColor[] = {.35f ,0.16f ,0.14f};
+	        //asteriod 1
+	        gl.glColor3f(asteriodColor[0],asteriodColor[1],asteriodColor[2]);
+	        if (asteriodPos[0][0] > 200f){
+	        	asteriodPos[0][0] = -400 ;
+	        	int randomAsteriodSpotZ = 50 + (int)(Math.random() * ((500 - 50) + 1));
+	        	asteriodPos[0][2] = (float)randomAsteriodSpotZ ;
+
+	        }
+	        else
+	        	asteriodPos[0][0] = asteriodPos[0][0] +5f;
+	        gl.glTranslatef(asteriodPos[0][0], asteriodPos[0][1], asteriodPos[0][2]);
+	        glu.gluSphere(quadric, 8f, 25, 25);
+	        
+	        
+	        //asteriod 2
+	        gl.glColor3f(asteriodColor[0],asteriodColor[1],asteriodColor[2]);
+	        if (asteriodPos[1][0] > 200f){
+	        	asteriodPos[1][0] = -300 ;
+	        	int randomAsteriodSpotZ = 50 + (int)(Math.random() * ((500 - 50) + 1));
+	        	asteriodPos[1][2] = (float)randomAsteriodSpotZ ;
+
+	        }
+	        gl.glTranslatef(asteriodPos[1][0], asteriodPos[1][1], asteriodPos[1][2]);
+	        glu.gluSphere(quadric, 8f, 25, 25);
+			
+		gl.glPopMatrix();
+		
+		gl.glPopMatrix();
+		
+		checkPointProgress();
+
+		if(thirdPerson == false)
+			drawGui(gl);
+		
+
+		
+	}
+	
+	
+    public float[] takeStep(boolean stepSideways){
+    	float slope;
+    	if (!stepSideways)
+    		slope = (eyeZ + stepDirections[2]) / (eyeX + stepDirections[0]);
+    	else
+    		slope = -(eyeZ + stepDirections[0]) / (eyeX + stepDirections[2]);
+    	
+    	float x = (float) Math.sqrt( (float)Math.pow(stepSize, 2) / (1.0 + (float)Math.pow(slope, 2) ) ); //euclidan distance
+    	
+    	float y = (float) Math.sqrt( (float)Math.pow(stepSize, 2) / (1.0 + (float)Math.pow(slope, 2) ) );
+    	//float y = slope*x;
+    	float z = slope*x; 
+    	//stepSize = 0.05f; 
+    	//stepSize = 1.09f; 
+    	float[] result = new float[3];
+    	result[0] = x;
+    	result[1] = y;
+    	result[2] = z;
+    	return result;
+    }
+	
+    public float[] aimEye(GL2 gl, GLU glu)
+    {
+    	gl.glLoadIdentity();
+
+    	float[] tmp = polarToCartesian(pane, 100.0f, elevation);
+    	float[] camUp = polarToCartesian(pane, 100.0f, elevation + 90);
+    	cameraUpx = camUp[0];
+    	cameraUpy = camUp[1];
+    	cameraUpz = camUp[2];
+    	glu.gluLookAt(eyeX, eyeY, eyeZ,
+    			eyeX + tmp[0], eyeY + tmp[1],eyeZ + tmp[2],
+    			cameraUpx, cameraUpy, cameraUpz);
+    	
+
+    	return tmp;
+    }
+
+    private float[] polarToCartesian (float azimuth, float length, float altitude)
+    {
+    	float[] result = new float[3];
+    	float x, y, z;
+    	float theta = (float)Math.toRadians(90 - azimuth);
+    	float tantheta = (float) Math.tan(theta);
+    	float radian_alt = (float)Math.toRadians(altitude);
+    	float cospsi = (float) Math.cos(radian_alt);
+    	x = (float) Math.sqrt((length * length) / (tantheta * tantheta + 1));
+    	z = tantheta * x;
+    	x = -x;
+    	
+    	if ((azimuth >= 180.0 && azimuth <= 360.0) || azimuth == 0.0f) {
+    		x = -x;
+    		z = -z;
+    	}
+    	
+    	y = (float) (Math.sqrt(z * z + x * x) * Math.sin(radian_alt));
+    	
+    	if (length < 0) {
+    		x = -x;
+    		z = -z;
+    		y = -y;
+    	}
+    	x = x * cospsi;
+    	z = z * cospsi;
+    	
+    	result[0] = x;
+    	result[1] = y;
+    	result[2] = z;
+    	
+    	/*
+    		if (zLast > 0 && result[2] > 0)
+    			result[2] = Math.abs(z);
+    		else if (zLast < 0 && result[2] < 0)
+    			result[2] = - Math.abs(z);
+    	*/
+    	zLast = z;
+    	/*
+		System.out.println(pane);
+		System.out.println(result[0]);
+    	System.out.println(result[1]);
+    	System.out.println(result[2]);
+		System.out.println("\n\n");
+    	*/
+    	
+    	return result;
+    }
+
+	@Override
+	public void dispose( GLAutoDrawable arg0 ) {
+	}
+
+	@Override
+	public void keyTyped( KeyEvent e ) {
+		char key = e.getKeyChar();
+		switch ( key ) {
+			case KeyEvent.VK_P:
+				psychedelic_mode = ! psychedelic_mode;
+				break;
+			
+			case KeyEvent.VK_F:
+				skybox_follow_camera = ! skybox_follow_camera;
+				break;
+			
+			case KeyEvent.VK_OPEN_BRACKET:
+				if ( paper_cube_size > 0 )
+					paper_cube_size--;
+				break;
+				
+			case KeyEvent.VK_CLOSE_BRACKET:
+				paper_cube_size++;
+				break;
+		}
+		
+		// Change the skybox dynamically.
+		if ( key >= '1' && key <= '1' + Math.min( skybox_names.length, skybox_max_textures ) - 1 )
+			current_skybox = skyboxes[ key - 0x30 - 1 ];	
+		
+	}
+
+	@Override
+	public void keyPressed( KeyEvent e ) {
+		
+		keys[ e.getKeyCode() ] = true;
+		
+    	if (e.getKeyCode()== KeyEvent.VK_W) 
+    		forward =1;
+    	if (e.getKeyCode()== KeyEvent.VK_S) 
+    		back =1;
+    	if (e.getKeyCode()== KeyEvent.VK_D) 
+    		right =1;
+    	if (e.getKeyCode()== KeyEvent.VK_A) 
+    		left = 1;
+    	
+    	if (e.getKeyCode()== KeyEvent.VK_M) 
+    		stepSize = stepSize * 1.5f;
+    	
+    	if (e.getKeyCode()== KeyEvent.VK_V){
+    		viewShip = (viewShip + 15) % 360;
+    	}
+    	if (e.getKeyCode()== KeyEvent.VK_B){
+    		barrellroll = (barrellroll + 15) % 360;
+    	}
+
+    	if (e.getKeyCode()== KeyEvent.VK_SHIFT){
+    		forward = back = right = left = 0;
+    	}
+    	
+    	
+    	if (e.getKeyCode()== KeyEvent.VK_SPACE){
+    		stepSize = stepSize + .01f;
+    		mySpeed +=5;
+    	}
+    	
+    	if (e.getKeyCode()== KeyEvent.VK_Z){
+    		
+    		if (mySpeed == 0){}
+    		else{
+    			mySpeed -=5;
+    			stepSize = stepSize - .01f;
+    		}
+    		//forward = 1;
+    		//stepSize = stepSize*1.5f;
+    	}
+    		
+    	if (e.getKeyCode()== KeyEvent.VK_R){
+    		for (int i=0; i < checkPtsPassed.length;i++)
+    			checkPtsPassed[i] = false;
+    	}
+    		
+    	if (e.getKeyCode()== KeyEvent.VK_T) 
+    		thirdPerson = !(thirdPerson);
+    	
+      	if (e.getKeyCode()== KeyEvent.VK_0){
+
+    			userPos[0]=-checkPts[0][0];
+    		    userPos[1]=-checkPts[0][1];
+    		    userPos[2]=-checkPts[0][2];
+        		for (int i=0; i < checkPtsPassed.length;i++)
+        			checkPtsPassed[i] = false;
+    		
+    	}
+    	
+    	
+    	if (e.getKeyCode()== KeyEvent.VK_1){
+    		if (checkPtsPassed[0] == true){
+    			userPos[0]=checkPts[0][0];
+    		    userPos[1]=checkPts[0][1];
+    		    userPos[2]=checkPts[0][2];
+    		}	
+    	}
+    	if (e.getKeyCode()== KeyEvent.VK_2){
+    		if (checkPtsPassed[0] == true){
+    			userPos[0]=-checkPts[1][0];
+    		    userPos[1]=-checkPts[1][1];
+    		    userPos[2]=-checkPts[1][2];
+    		}	
+    	}
+    	if (e.getKeyCode()== KeyEvent.VK_3){
+    		if (checkPtsPassed[0] == true){
+    			userPos[0]=-checkPts[2][0];
+    		    userPos[1]=-checkPts[2][1];
+    		    userPos[2]=-checkPts[2][2];
+    		}	
+    	}
+    	if (e.getKeyCode()== KeyEvent.VK_4){
+    		if (checkPtsPassed[0] == true){
+    			userPos[0]=-checkPts[3][0];
+    		    userPos[1]=-checkPts[3][1];
+    		    userPos[2]=-checkPts[3][2];
+    		}	
+    	}
+    		//forward =1;
+		
+		/*
+		if (e.getKeyCode()== KeyEvent.VK_W){
+			//cameraPosition += forwardVector * movementSpeed;
+			//lookatPosition += forwardVector * movementSpeed;
+			if ( scene_eye_x < 0 && scene_eye_y < 0){
+			scene_eye_x += deltaX*0.1f;
+			scene_eye_y += deltaY*0.1f;
+			}
+			else{
+				scene_eye_x -= deltaX*0.1f;
+				scene_eye_y -= deltaY*0.1f;
+					
+			}
+			//scene_eye_z += deltaZ*0.1f;
+			
+			
+			//scene_look_x = scene_eye_x;
+			//scene_look_y = scene_eye_y;
+			//scene_look_z = scene_eye_z;
+			
+			//scene_look_x += deltaX*0.1f;
+			//scene_look_y += deltaY*0.1f;
+			//scene_look_z += deltaZ*0.1f;
+			
+			
+			//scene_eye_x =scene_eye_x + .1f;	//objects come toward you: "forwards"
+			//scene_eye_x =scene_eye_x + deltaX*0.1f;
+			//scene_eye_y =scene_eye_y + deltaY*0.1f;
+		}
+		if (e.getKeyCode()== KeyEvent.VK_D)	
+			scene_eye_y =scene_eye_y - .1f; //go right
+		if (e.getKeyCode()== KeyEvent.VK_A)
+			scene_eye_y =scene_eye_y + .1f;	//go left	
+			
+		if (e.getKeyCode()== KeyEvent.VK_S)
+			if ( scene_eye_x > 0 && scene_eye_y > 0){
+			scene_eye_x += deltaX*0.1f;
+			scene_eye_y += deltaY*0.1f;
+			}
+			else{
+				scene_eye_x -= deltaX*0.1f;
+				scene_eye_y -= deltaY*0.1f;
+					
+			}
+			//scene_eye_x =scene_eye_x - .1f; //objects go away from you: "backwards"
+		if (e.getKeyCode()== KeyEvent.VK_Q)
+			scene_eye_z =scene_eye_z + .1f; //move down	
+		if (e.getKeyCode()== KeyEvent.VK_E)
+			scene_eye_z =scene_eye_z - .1f; //move up
+			
+			
+			//move = move + 0.1f;
+		
+		*/	
+	}
+
+	@Override
+	public void keyReleased( KeyEvent e ) {
+		keys[ e.getKeyCode() ] = false;
+	}
+
+	@Override
+	public void mouseDragged( MouseEvent e ) {
+		float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+		float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+		
+		
+		
+		
+		
+		float leftRight = (XX - Float.parseFloat(String.format("%.1f", mouseX0)));
+		float upDown = (YY - Float.parseFloat(String.format("%.1f", mouseY0)));
+		
+		System.out.println("\n leftRight:");
+		System.out.println(leftRight);
+		System.out.println("\n upDown:");
+		System.out.println(upDown);
+		
+		if (leftRight >= 0 && Math.abs(leftRight) > Math.abs((double)upDown)){
+			exitRight = true;
+		}
+		if (leftRight < 0 && Math.abs(leftRight) > Math.abs((double)upDown)){
+			exitLeft =true;
+		}
+		
+		if (upDown > 0 &&  Math.abs((double)upDown) > Math.abs((double)leftRight)){
+			exitBott=true;
+		}
+		if (upDown < 0 &&  Math.abs((double)upDown) > Math.abs((double)leftRight)){
+			exitTop =true;
+		}
+		
+		
+		/*
+		if ( (XX - Float.parseFloat(String.format("%.1f", mouseX0))) < 0 &&
+				(XX - Float.parseFloat(String.format("%.1f", mouseX0))) > (YY - Float.parseFloat(String.format("%.1f", mouseY0))))
+			exitLeft = true;
+			//pane -= 1 ;
+		
+		
+		else
+			exitRight= true;
+			//pane += 1 ;
+		
+		
+		if ( (YY - Float.parseFloat(String.format("%.1f", mouseY0))) < 0) 
+				//(XX - Float.parseFloat(String.format("%.1f", mouseX0))) < (YY - Float.parseFloat(String.format("%.1f", mouseY0))))
+			exitTop = true;
+			//elevation -= 1 ;
+		else
+			exitBott = true;
+			//elevation += 1 ;
+		*/
+	/*	
+		
+
+		int x = e.getX();
+		int y = e.getY();
+		final float throttle_rot = 128.0f;
+		
+		float dx = ( x - mouse_x0 );
+		float dy = ( y - mouse_y0 );
+		if ( MOUSE_MODE_ROTATE == mouse_mode ) {
+			float phi = (float) Math.acos( scene_look_z );
+			float theta = (float) Math.atan2( scene_look_y, scene_look_x );
+			
+			theta -= dx / throttle_rot;
+			phi += dy / throttle_rot;
+			
+			if ( theta >= Math.PI * 2.0 )
+				theta -= Math.PI * 2.0;
+			else if ( theta < 0 )
+				theta += Math.PI * 2.0;
+			
+			if ( phi > Math.PI - 0.1 )
+				phi = (float)( Math.PI - 0.1 );
+			else if ( phi < 0.1f )
+				phi = 0.1f;
+			
+			scene_look_x = (float)( Math.cos( theta ) * Math.sin( phi ) );
+			scene_look_y = (float)( Math.sin( theta ) * Math.sin( phi ) );
+			scene_look_z = (float)( Math.cos( phi ) );
+		}
+			mouse_x0 = x;
+			mouse_y0 = y;
+*/
+	}
+	
+	//This handles movement
+	@Override
+	public void mouseMoved( MouseEvent e ) {
+		float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+		float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+		
+		
+		
+		exitTop = false;
+		if (paneUp != 0 && paneUp <= 30)
+			paneUp-=1;
+		exitBott = false;
+		System.out.println("panUp\n");
+		System.out.println(paneUp);
+		if (paneUp != 0 && paneUp < -30)
+			paneUp+=1;
+		
+		
+		//exitRight = exitLeft = exitTop = exitBott =false;
+		
+		
+		
+		
+		if ( (XX - Float.parseFloat(String.format("%.1f", mouseX0))) < 0)
+			pane -= .1 ;
+		else
+			pane += .1 ;
+		
+		if ( (YY - Float.parseFloat(String.format("%.1f", mouseY0))) < 0)
+			elevation -= .1 ;
+		else
+			elevation += .1 ;
+
+		//System.out.printf("windowWidth %f  \n", (windowHeight*0.5f)*orthoX/windowWidth); 
+		//System.out.printf("mouse left at %f %f \n", XX, YY); 
+		if ( (int)XX == (int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitRight = true;
+		else if ( (int)XX == -(int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitLeft = true;
+		else if ( (int)YY == -(int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitTop = true;
+		else if ( (int)YY ==  (int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitBott = true;
+		else
+			
+		
+		if ( (int)XX > (int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitRight = false;
+		if ( (int)XX > -(int)(windowWidth*0.5f)*orthoX/windowWidth) 
+			exitLeft = false;
+		if ( (int)YY < -(int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitTop = false;
+		if ( (int)YY <  (int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitBott = false;
+
+		/*
+    	if (pane > 360)
+    		pane = 1;
+    		
+    	if (pane < 0)
+    		pane = 360;
+		*/
+		
+		mouseX0 = XX; 
+		mouseY0 = YY;
+
+	}
+
+	@Override
+	public void mouseClicked( MouseEvent e ) {
+	}
+
+	@Override
+	public void mousePressed( MouseEvent e ) {
+		mouse_x0 = e.getX();
+		mouse_y0 = e.getY();
+		
+		if ( MouseEvent.BUTTON1 == e.getButton() ) {
+			mouse_mode = MOUSE_MODE_ROTATE;
+		} else {
+			mouse_mode = MOUSE_MODE_NONE;
+		}
+	}
+
+	@Override
+	public void mouseReleased( MouseEvent e ) {
+		exitRight = exitLeft = exitTop = exitBott =false;
+	}
+
+	@Override
+	public void mouseEntered( MouseEvent e ) {
+		exitRight = exitLeft = exitTop = exitBott =false;
+		//barrellroll = paneUp = 0;
+	}
+
+	@Override
+	public void mouseExited( MouseEvent e ) {
+		float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+		float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+		
+		if ( (int)XX == (int)(windowWidth*0.5f)*orthoX/windowWidth){ //mouse moving right
+		
+			exitRight = true;
+			//System.out.println("EXITED@");
+			//System.out.println(XX);
+			//System.out.println(YY);
+			//System.out.println("\n\n");
+		}
+		else if ( (int)XX == -(int)(windowWidth*0.5f)*orthoX/windowWidth){ //mouse moving left
+			exitLeft = true;
+
+		}
+		else if ( (int)YY == -(int)((windowHeight*0.5f)*orthoX/windowWidth)){
+			exitTop = true;
+
+		}
+		else if ( (int)YY ==  (int)((windowHeight*0.5f)*orthoX/windowWidth)){
+			exitBott = true;
+
+		}
+		else{}
+
+	/*	
+    	if (pane > 360)
+    		pane = 0;
+    		
+    	if (pane < 0)
+    		pane = 360;
+    */
+	}
+	
+	public  void drawGui(GL2 gl){
+		
+		//System.out.println("\n width:");
+		//System.out.println(windowWidth);
+		
+		
+		boolean gameOver = true;
+		for (int i=0; i < checkPtsPassed.length; i++){
+			if (checkPtsPassed[i] == false){ 
+				gameOver = false;
+				break;
+				}
+		}
+		
+		String checkPtProgress;
+		if (gameOver){
+			checkPtProgress = "Game Complete!";
+		}
+		else{
+			checkPtProgress = "Checkpoints passed";
+			
+			for (int i=0; i < checkPtsPassed.length; i++){
+				
+				if (checkPtsPassed[i] == true){
+						checkPtProgress= checkPtProgress+":"+(i+1);
+				}
+			}
+		}
+
+		String speed = "Speed:"+ Float.toString(mySpeed); //"text2";
+		String text3 = "text3";
+		
+		TextRenderer renderer = new TextRenderer(new Font("Serif", Font.PLAIN, 50), true, true);
+		renderer.beginRendering(1000, 1000);
+		gl.glPushMatrix();
+		renderer.setColor(0.0f, 1.0f, 1.0f, 1);
+		//2nd parameter: how far over you go, 3rd how far up
+		renderer.draw(checkPtProgress, 0 ,(int)(windowHeight*0.9f));
+		renderer.flush();
+		renderer.draw(speed, 0 ,0);
+		renderer.flush();
+		renderer.draw(text3, windowWidth ,(int)(windowHeight*0.9f));
+		gl.glPopMatrix();
+		renderer.endRendering();
+	
+	}
+	
+	public  void checkPointProgress(){
+		for (int i = 0; i < checkPts.length;i++){
+			if ( euclideanDis(-userPos[0], -userPos[1], -userPos[2], checkPts[i][0], checkPts[i][1], checkPts[i][2] ) <= 10.0f ){
+				checkPtsPassed[i] = true;
+			}
+		}
+		
+		
+	}
+	
+    public  float euclideanDis(float x1, float y1, float z1, float x2, float y2, float z2)
+    {
+		double  xDiff = x1-x2;
+	    double  xSqr  = Math.pow(xDiff, 2);
+	
+		double yDiff = y1-y2;
+		double ySqr = Math.pow(yDiff, 2);
+	
+		double zDiff = z1-z2;
+		double zSqr = Math.pow(zDiff, 2);
+	
+		double output   = Math.sqrt(xSqr + ySqr + zSqr);
+		
+		//System.out.println("Distance = " + output);  
+		return (float)output;
+    }
+    
+    
+	public void drawCheckPoint(final GL2 gl, float centerX, float centerY, float centerZ){
+		float theta;
+		float angle_increment;
+		float x1;
+		float y1;
+		int x = -5, y =0, width = 15, height = 15;
+
+		angle_increment = (float) Math.PI / 500;
+		gl.glPushMatrix();
+		gl.glColor3f(0, 1, 0);
+		gl.glTranslatef(centerX + (width / 2), centerY + (height / 2), 0);
+
+		gl.glBegin(11);
+		gl.glVertex2f(10, 10);
+
+		for (int j=0; j < 5; j++){
+			for (theta = 0.0f; theta < 2 * Math.PI; theta += angle_increment) {
+				x1 = (float) (width / 2 * Math.cos(theta));
+				y1 = (float) (height / 2 * Math.sin(theta));
+	
+				//gl.glVertex2f(x1, y1);
+				gl.glVertex3f(x1, y1, centerZ-j);
+			}
+		}
+
+		
+
+		gl.glEnd();
+
+		gl.glPopMatrix();
+	}
+
+	
+	public void drawSpaceShip(final GL2 gl) {
+
+
+		//This function loads .obj file and displays it
+		//
+	    gl.glBegin(GL2.GL_QUADS);    	
+		//gl.glBegin(GL2.GL_TRIANGLES);
+	    //gl.glColor3f(0.0f, 1.0f, 0.0f);
+	    
+    	final InputStream in;
+    	final OBJParser parser;
+    	final OBJModel model;
+		try {
+			
+			
+			//Yu change this to your local path, SpaceShip.obj should be included in the directory 
+			//in = new FileInputStream("C:\\Users\\Lankford\\Desktop\\335proj\\project\\skybox_textures\\SpaceShip.obj");
+			//in = new FileInputStream("SpaceShip.obj");
+			String curDir = System.getProperty("user.dir");
+			in = new FileInputStream(curDir + "\\src\\SpaceRacing\\SpaceShip.obj");
+			//in = new FileInputStream("C:\\Users\\Lankford\\Desktop\\cube2.obj");
+			//in = new FileInputStream("C:\\Users\\Lankford\\Desktop\\falcon.obj");
+			
+			parser =   new OBJParser();
+			model = parser.parse(in);
+			/*
+	    	System.out.println(MessageFormat.format(
+	    	        "OBJ model has {0} vertices, {1} normals, {2} texture coordinates, and {3} objects.",
+	    	        model.getVertices().size(),
+	    	        model.getNormals().size(),
+	    	        model.getTexCoords().size(),
+	    	        model.getObjects().size()));
+	    	*/
+	    	for (OBJObject object : model.getObjects()) {
+	    	    for (OBJMesh mesh : object.getMeshes()) {
+	    	        for (OBJFace face : mesh.getFaces()) {
+	    	            //System.out.print(face.getReferences());
+	    	            //face.getReferences().get(0).normalIndex //this gets array index of the vertice to draw
+	    	            //(model.getVertices().get(0).z) //this gets the z coord of a vertex
+	    	            //gl.glColor3f(1, 0, 0);
+	    	        	
+	    	           for (int i = 0; i < face.getReferences().size(); i++){
+	    	        	   
+	    	        	   float tempX =model.getVertices().get(face.getReferences().get(i).vertexIndex).x + move;
+	    	        	   float tempY =model.getVertices().get(face.getReferences().get(i).vertexIndex).y+ move;
+	    	        	   float tempZ =model.getVertices().get(face.getReferences().get(i).vertexIndex).z+ move;
+	    	        	   
+	    	        	   /*
+	    	        	   tempX=tempX*0.1f;
+	    	        	   tempY=tempY*0.1f;
+	    	        	   tempZ=tempZ*0.1f;
+	    	        	   */
+	    	        	   //gl.glBegin(GL2.GL_QUADS);
+	    	        	   //gl.glColor3f(0.658824f , 0.658824f , 0.658824f);
+	    	        	   //gl.glVertex3f(tempX, tempY,tempZ);
+	    	        	   //gl.glEnd();
+	    	        	   
+	    	        	   
+	    	        	  //gl.glBegin(GL2.GL_LINES); 
+	    	        	  //gl.glColor3f(0.0f , 0.0f , 0.0f);
+	    	        	   
+
+	    	     
+	    	        		   float derp  =0.657f + (int)(Math.random() * ((0.6585f - 0.658f) + 1));
+	    	        	  gl.glColor3f(0.658824f , 0.658824f , 0.658824f);
+		    	        	   //gl.glColor3f(derp , derp , derp);
+		    	        	  gl.glVertex3f(tempX, tempY,tempZ);
+	    	        	   
+	    	        	  //gl.glEnd();
+	    	        	   
+	    	        	  //gl.glBegin(GL2.GL_QUADS); 
+	    	        	   
+	    	        	   /*
+	    	        	   gl.glVertex3f(
+	    	        			   model.getVertices().get(face.getReferences().get(i).vertexIndex).x,
+	    	        			   model.getVertices().get(face.getReferences().get(i).vertexIndex).y,
+	    	        			   model.getVertices().get(face.getReferences().get(i).vertexIndex).z);
+	    	        	   System.out.print("\n\n\n");
+	    	        	   */
+	    	        	   //System.out.print(model.getVertices().get(face.getReferences().get(0).normalIndex).x);
+	    	        	   //System.out.print(model.getVertices().get(face.getReferences().get(0).normalIndex).y);
+	    	        	   //System.out.print(model.getVertices().get(face.getReferences().get(0).normalIndex).z);
+	    	           }
+	    	        }
+	    	    }
+	    	}	
+	    	
+	    		    
+	    	//System.out.print((model.getVertices().get(0).x));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	// Create an OBJParser and parse the resource
+		catch (WFException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	    
+		
+
+		
+	    
+	    
+    	// on the XY plane
+    	// front plane
+         //gl.glNormal3f(0,  0, 1);
+         //gl.glColor3f(1, 0, 0);
+
+
+         gl.glEnd(); 
+         
+    }
+	public void drawSpaceShip2(final GL2 gl) {
+
+
+		//This function loads .obj file and displays it
+		//
+		gl.glBegin(GL2.GL_LINES);    	
+		
+	    //gl.glColor3f(0.0f, 1.0f, 0.0f);
+	    
+    	final InputStream in;
+    	final OBJParser parser;
+    	final OBJModel model;
+		try {
+			
+			
+			//Yu change this to your local path, SpaceShip.obj should be included in the directory 
+			//in = new FileInputStream("C:\\Users\\Lankford\\Desktop\\335proj\\project\\skybox_textures\\SpaceShip.obj");
+			//in = new FileInputStream("C:\\Users\\Lankford\\Desktop\\shuttle.obj");
+			String curDir = System.getProperty("user.dir");
+			in = new FileInputStream(curDir + "\\src\\SpaceRacing\\SpaceShip.obj");
+			
+			parser =   new OBJParser();
+			model = parser.parse(in);
+			/*
+	    	System.out.println(MessageFormat.format(
+	    	        "OBJ model has {0} vertices, {1} normals, {2} texture coordinates, and {3} objects.",
+	    	        model.getVertices().size(),
+	    	        model.getNormals().size(),
+	    	        model.getTexCoords().size(),
+	    	        model.getObjects().size()));
+	    	*/
+
+				
+				for (int i = 0; i < model.getVertices().size(); i++){
+					/*
+				   System.out.print("\n\n");
+ 	        	   System.out.println(model.getVertices().get(i).x);
+ 	        	  System.out.println(model.getVertices().get(i).y);
+ 	        	 System.out.println(model.getVertices().get(i).z);
+ 	        	 */
+
+	        	   /*
+	        	   tempX=tempX*0.1f;
+	        	   tempY=tempY*0.1f;
+	        	   tempZ=tempZ*0.1f;
+	        	   */
+	        	   //gl.glBegin(GL2.GL_QUADS);
+	        	   //gl.glColor3f(0.658824f , 0.658824f , 0.658824f);
+	        	   //gl.glVertex3f(tempX, tempY,tempZ);
+	        	   //gl.glEnd();
+	        	   
+	        	   
+	        	  //gl.glBegin(GL2.GL_LINES); 
+	        	  //gl.glColor3f(0.0f , 0.0f , 0.0f);
+	        	  gl.glColor3f(0.0f , 0.0f , 0.0f);
+	        	  if (i <20 )
+	        		  gl.glVertex3f(model.getVertices().get(i).x, model.getVertices().get(i).y,model.getVertices().get(i).z);
+ 	        	 
+ 	        	 
+				}
+			
+			
+	    	for (OBJObject object : model.getObjects()) {
+	    	    for (OBJMesh mesh : object.getMeshes()) {
+	    	        for (OBJFace face : mesh.getFaces()) {
+	    	            //System.out.print(face.getReferences());
+	    	            //face.getReferences().get(0).normalIndex //this gets array index of the vertice to draw
+	    	            //(model.getVertices().get(0).z) //this gets the z coord of a vertex
+	    	            //gl.glColor3f(1, 0, 0);
+	    	        	
+	    	           for (int i = 0; i < face.getReferences().size(); i++){
+	    	        	   
+	    	        	   
+	    	        	   //gl.glBegin(GL2.GL_QUADS);
+	    	        	   //gl.glColor3f(0.658824f , 0.658824f , 0.658824f);
+	    	        	   //gl.glVertex3f(tempX, tempY,tempZ);
+	    	        	   //gl.glEnd();
+	    	        	   
+	    	        	   
+	    	        	  //gl.glBegin(GL2.GL_LINES); 
+	    	        	  //gl.glColor3f(0.0f , 0.0f , 0.0f);
+	    	        	  gl.glColor3f(0.0f , 0.0f , 0.0f);
+	    	
+	    	        	  //gl.glEnd();
+	    	        	   
+	    	        	  //gl.glBegin(GL2.GL_QUADS); 
+	    	        	  
+	    	        	   
+	    	        	   gl.glVertex3f(
+	    	        			   model.getVertices().get(face.getReferences().get(i).vertexIndex).x,
+	    	        			   model.getVertices().get(face.getReferences().get(i).vertexIndex).y,
+	    	        			   model.getVertices().get(face.getReferences().get(i).vertexIndex).z);
+	    	        	   //System.out.print("\n\n\n");
+	    	        	   
+	    	        	   //System.out.print(model.getVertices().get(face.getReferences().get(0).normalIndex).x);
+	    	        	   //System.out.print(model.getVertices().get(face.getReferences().get(0).normalIndex).y);
+	    	        	   //System.out.print(model.getVertices().get(face.getReferences().get(0).normalIndex).z);
+	    	           }
+	    	        }
+	    	    }
+	    	}	
+	    	
+	    		    
+	    	//System.out.print((model.getVertices().get(0).x));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	// Create an OBJParser and parse the resource
+		catch (WFException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    	// on the XY plane
+    	// front plane
+         //gl.glNormal3f(0,  0, 1);
+         //gl.glColor3f(1, 0, 0);
+
+
+         gl.glEnd(); 
+         
+    }
+
+	
+	/*
+	private class Vector3 {
+		private double data[];
+
+		public Vector3() {
+		}
+
+		public Vector3(double x, double y, double z) {
+			data = new double[3];
+			data[0] = x;
+			data[1] = y;
+			data[2] = z;
+		}
+
+		public double getX() {
+			return data[0];
+		}
+
+		public void setX(double x) {
+			data[0] = x;
+		}
+
+		public double getY() {
+			return data[1];
+		}
+
+		public void setY(double y) {
+			data[1] = y;
+		}
+
+		public double getZ() {
+			return data[2];
+		}
+
+		public void setZ(double z) {
+			data[2] = z;
+		}
+
+	}
+
+	public void drawSphere(GL2 gl, float[] color) {
+
+		int step = 10;
+		int latN = 180 / step + 1;
+		int longtiN = 360 / step;
+		Vector3[][] xyz = new Vector3[latN][longtiN];
+		int i = 0, j = 0;
+
+		for (double lat = -90; lat < 90 + step; lat += step, i++) {
+			double y = Math.sin(lat * Math.PI / 180.0);
+			j = 0;
+			for (float longti = -180; longti < 180; longti += step, j++) {
+				double r = Math.cos(lat * Math.PI / 180.0);
+				double x = Math.cos(longti * Math.PI / 180.0) * r;
+				double z = Math.sin(longti * Math.PI / 180.0) * r;
+
+				xyz[i][j] = new Vector3(x, y, z);
+			}
+		}
+		gl.glPolygonMode(GL2.GL_FRONT, GL2.GL_FILL);
+		//gl.glPolygonMode(GL2.GL_BACK, GL2.GL_LINE);
+
+		gl.glBegin(GL2.GL_TRIANGLES);
+		
+		gl.glColor4f(color[0], color[1], color[2], 1);
+		for (i = 0; i < latN - 1; i++) {
+			for (j = 0; j < longtiN; j++) {
+				Vector3 p0 = xyz[i][j];
+				Vector3 p1 = xyz[i + 1][j];
+				Vector3 p2 = xyz[i + 1][(j + 1) % longtiN];
+				Vector3 p3 = xyz[i][(j + 1) % longtiN];
+
+				 gl.glNormal3d(p0.getX(), p0.getY(), p0.getZ()); gl.glVertex3d(p0.getX(), p0.getY(), p0.getZ());
+                 gl.glNormal3d(p1.getX(), p1.getY(), p1.getZ()); gl.glVertex3d(p1.getX(), p1.getY(), p1.getZ());
+                 gl.glNormal3d(p2.getX(), p2.getY(), p2.getZ()); gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
+                 
+                 gl.glNormal3d(p0.getX(), p0.getY(), p0.getZ()); gl.glVertex3d(p0.getX(), p0.getY(), p0.getZ());
+                 gl.glNormal3d(p2.getX(), p2.getY(), p2.getZ()); gl.glVertex3d(p2.getX(), p2.getY(), p2.getZ());
+                 gl.glNormal3d(p3.getX(), p3.getY(), p3.getZ()); gl.glVertex3d(p3.getX(), p3.getY(), p3.getZ());
+                 
+
+			}
+		}
+
+		gl.glEnd();
+
+	}
+	*/
+	
+}

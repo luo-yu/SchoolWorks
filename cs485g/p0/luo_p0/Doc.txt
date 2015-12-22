@@ -1,0 +1,34 @@
+Name: Yu Luo
+
+To run the program using Makefile, please use the following commands:
+
+1. make clean
+
+2. make SVM
+
+
+My program read a binary file from the arg[1], which is passed by user 
+as a parameter when he or she runs the program. 
+
+
+When the program starts, it declares a unsigned int array of size 4096.
+
+The program opens the file, and it reads the file 4 bytes at a time. 
+
+The program switches opcode, and determins the operation. 
+
+Once the operation is determined, the program read the next 12 bytes
+and does the appropriate operations. 
+
+
+
+My program assumes that the input file is in the correct format, that
+is, each instruction is exactly 16 bytes long, and the first 4 bytes
+will always be a constant
+
+The program has the following jump instructions implemented: 
+jgt
+jlt
+jeq
+stop
+

@@ -1,0 +1,12 @@
+
+
+add 0x1234, 0x5678, m5
+add 0x1112, 0x2221, m6
+sub m5, m6, m7
+or 0xff00, m7, m8
+and m7, m8, m9
+print m7, 0, 0
+print m8, 0, 0
+print m9, 0, 0
+printchars 0x41, 0, 0
+printchars 0x48, 0, 0 

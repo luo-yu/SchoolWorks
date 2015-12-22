@@ -1,0 +1,507 @@
+package helloOpenGL;
+
+
+
+
+
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.nio.DoubleBuffer;
+import java.lang.reflect.Array;
+import java.lang.Math;
+
+import javax.media.opengl.*;
+import javax.media.opengl.glu.GLU;
+
+
+
+
+public class JoglEventListener implements GLEventListener, KeyListener, MouseListener, MouseMotionListener {
+	
+	float[] vertices={5.97994f, -0.085086f, -0.010798f, 
+			5.97994f, 10.0043f, -0.010798f, 
+			7.99077f, 10.0043f, -0.010798f, 
+			7.99077f, 11.3449f, -0.010798f, 
+			-0.405339f, 11.3449f, -0.010798f, 
+			-0.405339f, 9.98083f, -0.010798f, 
+			1.65252f, 9.98083f, -0.010798f, 
+			1.65252f, 0.549879f, -0.010798f, 
+			-0.722839f, 0.549879f, -0.010798f, 
+			-0.722839f, -1.69612f, -0.010798f, 
+			2.6168f, -1.69612f, -0.010798f, 
+			-7.24925f, 0.42055f, -0.010798f, 
+			-9.35415f, 0.42055f, -0.010798f, 
+			-9.35415f, 10.0043f, -0.010798f, 
+			-7.37859f, 10.0043f, -0.010798f, 
+			-7.37859f, 11.3802f, -0.010798f, 
+			-15.8217f, 11.3802f, -0.010798f, 
+			-15.8217f, 9.99258f, -0.010798f, 
+			-13.8109f, 9.99258f, -0.010798f, 
+			-13.8109f, -0.061591f, -0.010798f, 
+			-10.2361f, -1.73139f, -0.010798f, 
+			-7.26099f, -1.73139f, -0.010798f, 
+			-6.1909f, 0.855631f, -0.010798f, 
+			-8.11942f, 0.855631f, -0.010798f, 
+			-8.11942f, 2.31379f, -0.010798f, 
+			0.217914f, 2.31379f, -0.010798f, 
+			0.217914f, 0.926204f, -0.010798f, 
+			-1.73415f, 0.926204f, -0.010798f, 
+			-1.73415f, -4.10675f, -0.010798f, 
+			9.23724f, 0.937952f, -0.010798f, 
+			7.26169f, 0.937952f, -0.010798f, 
+			7.26169f, 2.38434f, -0.010798f, 
+			15.6696f, 2.38434f, -0.010798f, 
+			15.6696f, 1.00851f, -0.010798f, 
+			14.964f, 1.00851f, -0.010798f, 
+			7.75558f, -2.44873f, -0.010798f, 
+			14.4231f, -9.36318f, -0.010798f, 
+			16.0576f, -9.36318f, -0.010798f, 
+			16.0576f, -10.6685f, -0.010798f, 
+			7.62625f, -10.6685f, -0.010798f, 
+			7.62625f, -9.33965f, -0.010798f, 
+			9.67236f, -9.33965f, -0.010798f, 
+			4.49827f, -3.90687f, -0.010798f, 
+			-1.35784f, -6.59973f, -0.010798f, 
+			-1.35784f, -9.3279f, -0.010798f, 
+			0.217914f, -9.3279f, -0.010798f, 
+			0.217914f, -10.6919f, -0.010798f, 
+			-8.22526f, -10.6919f, -0.010798f, 
+			-8.22526f, -9.32786f, -0.010798f, 
+			-6.20266f, -9.32786f, -0.010798f};
+	//Polygon (3 sided, triangle)
+	int[] indices={3, 2, 3, 1, 
+			3, 1, 3, 6, 
+			3, 1, 6, 10, 
+			3, 10, 6, 7, 
+			3, 10, 7, 8, 
+			3, 4, 5, 6, 
+			3, 4, 6, 3, 
+			3, 10, 8, 9, 
+			3, 1, 10, 0, 
+			3, 13, 14, 15, 
+			3, 13, 15, 18, 
+			3, 13, 18, 20, 
+			3, 13, 20, 12, 
+			3, 16, 17, 18, 
+			3, 16, 18, 15, 
+			3, 12, 20, 21, 
+			3, 12, 21, 11, 
+			3, 20, 18, 19, 
+			3, 49, 22, 44, 
+			3, 44, 22, 28, 
+			3, 44, 28, 43, 
+			3, 43, 28, 29, 
+			3, 43, 29, 42, 
+			3, 42, 29, 35, 
+			3, 42, 35, 41, 
+			3, 41, 35, 36, 
+			3, 41, 36, 38, 
+			3, 38, 36, 37, 
+			3, 39, 40, 41, 
+			3, 39, 41, 38, 
+			3, 29, 30, 32, 
+			3, 29, 32, 34, 
+			3, 29, 34, 35, 
+			3, 46, 47, 49, 
+			3, 46, 49, 44, 
+			3, 46, 44, 45, 
+			3, 22, 23, 25, 
+			3, 22, 25, 27, 
+			3, 22, 27, 28, 
+			3, 25, 23, 24, 
+			3, 27, 25, 26, 
+			3, 49, 47, 48, 
+			3, 32, 30, 31, 
+			3, 34, 32, 33};
+	float backrgb[] = new float[4]; 
+	float rot;
+	
+	int iXChange = -4;
+	int iYChange = 7;
+	float fRadius = 4.0f;
+	int iOption = 2;
+	int iMouseOption = 0;
+	int iNewX = 0;
+	int iNewY = 0;
+	int iDiffX = 0;
+	int iDiffY = 0;
+	float fDiffX = 0;
+	float fDiffY = 0;
+	float fStartX = 0;
+	float fStartY = 0;
+	int iCurrentX = 0;
+	int icurrentY = 0;
+	int iOldDiffX = 0;
+	int iOldDiffY = 0;
+	float fOldDiffX = 0;
+	float fOldDiffY = 0;
+	float fScale = 1;
+	float fScaleOld = 1;
+	double dAngle = 0;
+	double dAngleOld = 0;
+	
+	
+	int windowWidth, windowHeight;
+	float orthoX=40;
+	float tVal_x, tVal_y, rVal_x, rVal_y, rVal;
+	double rtMat[] = new double[16];
+	int mouseX0, mouseY0;
+	int saveRTnow=0, mouseDragButton=0;
+	
+	
+
+    	private GLU glu = new GLU();
+
+	
+	 public void displayChanged(GLAutoDrawable gLDrawable, 
+	            boolean modeChanged, boolean deviceChanged) {
+	    }
+
+	    /** Called by the drawable immediately after the OpenGL context is
+	     * initialized for the first time. Can be used to perform one-time OpenGL
+	     * initialization such as setup of lights and display lists.
+	     * @param gLDrawable The GLAutoDrawable object.
+	     */
+	    public void init(GLAutoDrawable gLDrawable) {
+	        GL2 gl = gLDrawable.getGL().getGL2();
+	        //gl.glShadeModel(GL.GL_LINE_SMOOTH);              // Enable Smooth Shading
+	        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);    // Black Background
+	        gl.glClearDepth(1.0f);                      // Depth Buffer Setup
+	        gl.glEnable(GL.GL_DEPTH_TEST);              // Enables Depth Testing
+	        gl.glDepthFunc(GL.GL_LEQUAL);               // The Type Of Depth Testing To Do
+	        // Really Nice Perspective Calculations
+	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);  
+	    }
+
+
+	    
+
+	    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, 
+	            int height) {
+	    	windowWidth = width;
+	    	windowHeight = height;
+	        final GL2 gl = gLDrawable.getGL().getGL2();
+
+	        if (height <= 0) // avoid a divide by zero error!
+	            height = 1;
+	        final float h = (float) width / (float) height;
+	        gl.glViewport(0, 0, width, height);
+	        gl.glMatrixMode(GL2.GL_PROJECTION);
+	        gl.glLoadIdentity();
+	        gl.glOrtho(-orthoX*0.5, orthoX*0.5, -orthoX*0.5*height/width, orthoX*0.5*height/width, -100, 100);
+	        //glu.gluPerspective(45.0f, h, 1.0, 200.0);
+	    }
+
+		@Override
+		public void display(GLAutoDrawable gLDrawable) {
+			// TODO Auto-generated method stub
+			final GL2 gl = gLDrawable.getGL().getGL2();
+
+			gl.glClearColor(backrgb[0], 0, 1, 1);
+			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+
+			//backrgb[0]+=0.0005;
+			if (backrgb[0]> 1) backrgb[0] = 0; 
+			
+			
+			// =============================================
+			// draw your content in this function
+			//
+			// =============================================
+	        // =============================================
+			
+			
+			gl.glBegin(GL2.GL_TRIANGLES);
+			gl.glColor3f(1, 1, 1);
+			for( int i=0; i < indices.length; i = i+4 )
+			{
+				
+				
+				int i1 = indices[(i)+1];
+				int i2 = indices[(i)+2];
+				int i3 = indices[(i)+3];
+				
+				float[] ind1 = {vertices[(i1*3)], vertices[i1*3+1], vertices[i1*3+2]};
+				float[] ind2 = {vertices[i2*3], vertices[i2*3+1], vertices[i2*3+2]};
+				float[] ind3 = {vertices[i3*3], vertices[i3*3+1], vertices[i3*3+2]};
+				
+				if( iMouseOption == 0 || iMouseOption == 1 )
+				{
+					float fNewX1 = fStartX + fScale * ( ind1[0] - fStartX ) + fDiffX;
+					float fNewX2 = fStartX + fScale * ( ind2[0] - fStartX ) + fDiffX;
+					float fNewX3 = fStartX + fScale * ( ind3[0] - fStartX ) + fDiffX;
+					float fNewY1 = fStartY + fScale * ( ind1[1] - fStartY ) + fDiffY;
+					float fNewY2 = fStartY + fScale * ( ind2[1] - fStartY ) + fDiffY;
+					float fNewY3 = fStartY + fScale * ( ind3[1] - fStartY ) + fDiffY;
+					
+					//System.out.printf("XOrig: %f XNew: %f YOrig: %f YNew: %f\n", ind1[0], fNewX1, ind1[1], fNewY1);
+					gl.glVertex3f(fNewX1, fNewY1, ind1[2]);
+					gl.glVertex3f(fNewX2, fNewY2, ind2[2]);
+					gl.glVertex3f(fNewX3, fNewY3, ind3[2]);
+				}
+				if(iMouseOption == 2)
+				{
+					float fNewX1 = fStartX + ( ind1[0] - fStartX) * (float) Math.cos( dAngle ) - ( ind1[1] - fStartY ) * (float) Math.sin( dAngle ) + fOldDiffX;
+					float fNewX2 = fStartX + ( ind2[0] - fStartX) * (float) Math.cos( dAngle ) - ( ind2[1] - fStartY ) * (float) Math.sin( dAngle ) + fOldDiffX;
+					float fNewX3 = fStartX + ( ind3[0] - fStartX) * (float) Math.cos( dAngle ) - ( ind3[1] - fStartY ) * (float) Math.sin( dAngle ) + fOldDiffX;
+					float fNewY1 = fStartY + ( ind1[0] - fStartX) * (float) Math.sin( dAngle ) + ( ind1[1] - fStartY ) * (float) Math.cos( dAngle ) + fOldDiffY;
+					float fNewY2 = fStartY + ( ind2[0] - fStartX) * (float) Math.sin( dAngle ) + ( ind2[1] - fStartY ) * (float) Math.cos( dAngle ) + fOldDiffY;
+					float fNewY3 = fStartY + ( ind3[0] - fStartX) * (float) Math.sin( dAngle ) + ( ind3[1] - fStartY ) * (float) Math.cos( dAngle ) + fOldDiffY;
+					
+					//System.out.printf("XOrig: %f XNew: %f YOrig: %f YNew: %f\n", ind1[0], fNewX1, ind1[1], fNewY1);
+					gl.glVertex3f(fNewX1, fNewY1, ind1[2]);
+					gl.glVertex3f(fNewX2, fNewY2, ind2[2]);
+					gl.glVertex3f(fNewX3, fNewY3, ind3[2]);
+				}
+			}
+			gl.glEnd();
+	       
+			
+			if( fRadius <= 0.0 ) fRadius = 1.0f;
+			if( iOption < 1 ) iOption = 1;
+			if( iOption > 2 ) iOption = 2;
+			
+			
+			if( iOption == 1 )
+			{
+				// Outline w/ Lines
+				gl.glBegin(GL2.GL_LINE_LOOP);
+				gl.glColor3f(1,0,0);
+				for(int i=0; i<360; i+=10)
+				{
+					double x = fRadius * Math.cos(i/180.0*Math.PI) + iXChange;
+					double y = fRadius * Math.sin(i/180.0*Math.PI) + iYChange;
+					gl.glVertex3d(x, y, 0);
+				}
+				gl.glEnd();
+			}
+			
+			if( iOption == 2)
+			{
+				// Solid w/ Triangle Fan
+				gl.glBegin(GL2.GL_TRIANGLE_FAN);
+				gl.glColor3f(1,0.4f,0);
+				gl.glVertex2f(0 + iXChange, 0 + iYChange);
+				for(int i=0; i<= 360; i += 10)
+				{
+					double x = fRadius * Math.cos(i/180.0*Math.PI) + iXChange;
+					double y = fRadius * Math.sin(i/180.0*Math.PI) + iYChange;
+					gl.glVertex3d(x, y, 0);
+				}
+				gl.glEnd();
+	    
+			}
+	        
+		}
+
+		@Override
+		public void dispose(GLAutoDrawable arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void translate( int fStartX, int fStartY, int iEndX, int iEndY )
+		{
+			
+		}
+		
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+		    char key= e.getKeyChar();
+			System.out.printf("Key typed: %c\n", key);
+			
+			if( key == 'a' )
+			{
+				iXChange -= 1;
+			}
+			if( key == 'f' )
+			{
+				iXChange += 1;
+			}
+			if( key == 'w' )
+			{
+				iYChange += 1;
+			}
+			if( key == 'z' )
+			{
+				iYChange -= 1;
+			}
+			if( key == 'o' )
+			{
+				fRadius -= 1.0;
+			}
+			if( key == 'p' )
+			{
+				fRadius += 1.0;
+			}
+			if( key == 't')
+			{
+				if( iOption == 1 )
+				{
+					iOption = 2;
+				}
+				else if( iOption == 2 )
+				{
+					iOption = 1;
+				}
+			}
+			if( key == 's' )
+			{
+				System.out.printf("Scale!");
+				iMouseOption = 0;
+			}
+			if( key == 't' )
+			{
+				System.out.printf("Translate");
+				iMouseOption = 1;
+			}
+			if( key == 'r')
+			{
+				System.out.printf("Rotate");
+				iMouseOption = 2;
+			}
+			if( key == '0')
+			{
+				fScale = 1;
+				fStartX = 0;
+				fStartY = 0;
+				dAngle = 0;
+				fOldDiffX = 0;
+				fOldDiffY = 0;
+				fDiffX = 0;
+				fDiffY = 0;
+			}
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			// TODO Auto-generated method stub
+						
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+		
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			
+			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			
+			// Scale
+			if( iMouseOption == 0 )
+			{
+				if( ( XX - fStartX ) < 0 )
+				{
+						fScale = fScaleOld * ( 1.0f / (1 + fStartX - XX ) );
+					if( fScale < 0.01 )
+						fScale = 0.01f;
+					System.out.printf("shrinking\n");
+					
+				}
+				else if( ( XX - fStartX ) > 0 )
+				{
+					fScale = fScaleOld * ( 1 + XX - fStartX );
+					if( fScale > 10 )
+						fScale = 10;
+					System.out.printf("growing\n");
+				}
+				else
+					fScale = fScaleOld;
+				System.out.printf("Current Scale: %f\n", fScale);
+			}
+			
+			// Translate
+			if( iMouseOption == 1 )
+			{
+				fDiffX = ( XX - fStartX ) + fOldDiffX;
+				fDiffY = ( YY - fStartY ) + fOldDiffY;
+			}
+			
+			// Rotate
+			if( iMouseOption == 2 )
+			{
+				double dR = Math.sqrt( Math.pow( XX, 2) + Math.pow( YY, 2) );
+				dAngle = Math.atan2(YY,XX) + dAngleOld;
+				System.out.printf("R: %f Angle: %f\n", dR, dAngle);
+			}
+		}
+		
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			/*
+			 * Coordinates printout
+			 */
+			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			System.out.printf("WindowWidth: %d", windowWidth);
+			System.out.printf("Point clicked: (%.3f, %.3f)\n", XX, YY);
+			
+			fStartX = XX;
+			fStartY = YY;
+			
+			mouseX0 = e.getX();
+			mouseY0 = e.getY();
+			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
+				
+			}
+			else if(e.getButton()==MouseEvent.BUTTON3) {	// Right button
+							}
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+				fOldDiffX = fDiffX;
+				fOldDiffY = fDiffY;
+				fScaleOld = fScale;
+				dAngleOld = dAngle;
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			System.out.printf("ENTERED!");
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+	  /*  
+	public void init(GLDrawable gLDrawable) {
+		final GL gl = glDrawable.getGL();
+        final GLU glu = glDrawable.getGLU();
+
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-1.0f, 1.0f, -1.0f, 1.0f); // drawing square
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glLoadIdentity();
+    }*/
+	
+}

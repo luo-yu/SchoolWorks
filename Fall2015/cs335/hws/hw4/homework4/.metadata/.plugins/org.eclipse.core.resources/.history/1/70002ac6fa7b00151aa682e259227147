@@ -1,0 +1,473 @@
+package helloOpenGL;
+
+
+
+
+
+
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.nio.DoubleBuffer;
+import java.lang.reflect.Array;
+import java.lang.Math;
+
+import javax.media.opengl.*;
+import javax.media.opengl.glu.GLU;
+
+
+
+
+public class JoglEventListener implements GLEventListener, KeyListener, MouseListener, MouseMotionListener {
+	
+	// Sphere Sizes
+	float sunRadius = 1.0f;
+	float earthRadius = sunRadius / 3;
+	float moonRadius = sunRadius / 9;
+	
+	// Orbit Sizes
+	float earthOrbitRadius = 5.0f;
+	float moonOrbitRadius = 1.0f;
+	
+	// Orbit tilt angle ( about Z,  in degrees )
+	float earthTiltAngle = 12.0f;
+	float moonTiltAngle = -12.0f;
+	
+	// Current orbit angle ( About Y, in degrees)
+	float earthOrbitAngle = 0;
+	float moonOrbitAngle = 0;
+	
+	// Sun Coords
+	final float sunX = 0;
+	final float sunY = 0;
+	final float sunZ = 0;
+	
+	// Earth Coords
+	float earthX = 0;
+	float earthY = 0;
+	float earthZ = 0;
+	
+	// Moon Coords
+	float moonX = 0;
+	float moonY = 0;
+	float moonZ = 0;
+	
+	// Camera Coords
+	float camX = 3;
+	float camY = 0;
+	float camZ = 0;
+	
+	// Camera Lookat
+	final float camLookX = 0;
+	final float camLookY = 0;
+	final float camLookZ = 0;
+	
+	// Camera Radius
+	float camRadius = 3;
+	
+	// Camera Mouse Difference
+	float camDiffX = 0;
+	float camDiffY = 0;
+	float camDiffXOld = 0;
+	float camDiffYOld = 0;
+	float camZoom = 4;
+	float camZoomOld = 4;
+	
+	// Animation
+	boolean play = true;
+	float earthAnimSpeed = 0.05f;
+	float moonAnimSpeed = 0.5f;
+	boolean switchDir = false;
+	
+	// Mouse button
+	int mButton = 0;
+	
+	// Mouse
+	float mouseStartX = 0;
+	float mouseStartY = 0;
+	
+	// Other Vars
+	int windowWidth, windowHeight;
+	float orthoX=40;
+	float tVal_x, tVal_y, rVal_x, rVal_y, rVal;
+	double rtMat[] = new double[16];
+	int mouseX0, mouseY0;
+	int saveRTnow=0, mouseDragButton=0;
+	
+	
+
+    private GLU glu = new GLU();
+
+    	
+	 public void displayChanged(GLAutoDrawable gLDrawable, 
+	            boolean modeChanged, boolean deviceChanged) {
+	    }
+
+	    /** Called by the drawable immediately after the OpenGL context is
+	     * initialized for the first time. Can be used to perform one-time OpenGL
+	     * initialization such as setup of lights and display lists.
+	     * @param gLDrawable The GLAutoDrawable object.
+	     */
+	    public void init(GLAutoDrawable gLDrawable) {
+	        GL2 gl = gLDrawable.getGL().getGL2();
+	        //gl.glShadeModel(GL.GL_LINE_SMOOTH);              // Enable Smooth Shading
+	        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);    // Black Background
+	        gl.glClearDepth(1.0f);                      // Depth Buffer Setup
+	        gl.glEnable(GL.GL_DEPTH_TEST);              // Enables Depth Testing
+	        gl.glDepthFunc(GL.GL_LEQUAL);               // The Type Of Depth Testing To Do
+	        // Really Nice Perspective Calculations
+	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);  
+	        
+	        gl.glMatrixMode(GL2.GL_MODELVIEW);
+	        gl.glLoadIdentity();
+	        gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX,  rtMat, 0);
+	    }
+	    
+	    public float getXCoord( float angle, float radius )
+	    {
+	    	
+	    	return radius * (float)Math.cos( Math.toRadians( angle ) );
+	    }
+	    
+	    public float getYCoord( float angle, float radius )
+	    {
+	    	return 0;
+	    }
+	    
+	    public float getZCoord( float angle, float radius )
+	    {
+	    	return radius * (float)Math.sin( Math.toRadians( angle ) );
+	    }
+
+	    public void drawSphere( GL2 gl, float radius, float color[] )
+	    {
+	    	gl.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
+	    	
+	    	float y = 0;
+	    	float t = 0;
+	    	float x = 0;
+	    	float z = 0;
+	    	
+	    	// Generate Horizontal Lines
+	    	for( int a = -90; a <= 90; a += 15 )
+	    	{
+	    		gl.glBegin(GL2.GL_LINE_LOOP);
+		    	gl.glLineWidth(1.0f);
+		    	gl.glColor3f(color[0], color[1], color[2]);
+	    		for( int b = 0; b < 360; b += 20 )
+	    		{
+	    			y = radius * (float)Math.sin( Math.toRadians( a ) );
+	    			t = radius * (float)Math.cos( Math.toRadians( a ) );
+	    			x = t * (float)Math.cos( Math.toRadians( b ) );
+	    			z = t * (float)Math.sin( Math.toRadians( b ) );
+	    			gl.glVertex3f(x, y, z);
+	    		}
+	    		gl.glEnd();
+	    	}
+	    	
+	    	// Generate Vertical Lines
+	    	for( float a = 0; a <= 360; a += 20 )
+	    	{
+	    		gl.glBegin(GL2.GL_LINE_STRIP);
+		    	gl.glLineWidth(1.0f);
+		    	gl.glColor3f(color[0], color[1], color[2]);
+	    		for( float b = -90; b <= 90; b += 15 )
+	    		{
+	    			y = radius * (float)Math.sin( Math.toRadians( b ) );
+	    			t = radius * (float)Math.cos( Math.toRadians( b ) );
+	    			x = t * (float)Math.cos( Math.toRadians( a ) );
+	    			z = t * (float)Math.sin( Math.toRadians( a ) );
+	    			gl.glVertex3f(x, y, z);
+	    		}
+	    		gl.glEnd();
+	    	}
+	    }
+	    
+	    public void drawOrbitLines( GL2 gl, float radius, float currentAngle, float color[], boolean forwardBack )
+	    {
+	    	gl.glBegin( GL2.GL_LINE_STRIP );
+	    	gl.glColor3f( color[0], color[1], color[2] );
+	    	float newColor0 = color[0];
+	    	float newColor1 = color[1];
+	    	float newColor2 = color[2];
+	    	if( !forwardBack )
+	    	{
+		    	for( int i = 0; i < 355; i += 1 )
+		    	{
+		    		float x = radius * (float)Math.cos( Math.toRadians( currentAngle + i ) );
+		    		float z = radius * (float)Math.sin( Math.toRadians( currentAngle + i ) );
+		    		newColor0 = newColor0 - color[0] / 355;
+		    		newColor1 = newColor1 - color[1] / 355;
+		    		newColor2 = newColor2 - color[2] / 355;
+		    		gl.glColor3f( newColor0, newColor1, newColor2);
+		    		gl.glVertex3f( x, 0, z );
+		    	}
+		    	gl.glEnd();
+	    	}
+	    	else
+	    	{
+		    	for( int i = 0; i > -355; i -= 1 )
+		    	{
+		    		float x = radius * (float)Math.cos( Math.toRadians( currentAngle + i ) );
+		    		float z = radius * (float)Math.sin( Math.toRadians( currentAngle + i ) );
+		    		newColor0 = newColor0 - color[0] / 355;
+		    		newColor1 = newColor1 - color[1] / 355;
+		    		newColor2 = newColor2 - color[2] / 355;
+		    		gl.glColor3f( newColor0, newColor1, newColor2);
+		    		gl.glVertex3f( x, 0, z );
+		    	}
+		    	gl.glEnd();
+	    	}	
+	    }
+
+	    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, 
+	            int height) {
+	    	windowWidth = width;
+	    	windowHeight = height;
+	        final GL2 gl = gLDrawable.getGL().getGL2();
+
+	        if (height <= 0) // avoid a divide by zero error!
+	            height = 1;
+	        final float h = (float) width / (float) height;
+	        gl.glViewport(0, 0, width, height);
+	        gl.glMatrixMode(GL2.GL_PROJECTION);
+	        gl.glLoadIdentity();
+	        //gl.glOrtho(-orthoX*0.5, orthoX*0.5, -orthoX*0.5*height/width, orthoX*0.5*height/width, -100, 100);
+	        glu.gluPerspective(45.0f, h, 1.0, 200.0);
+	    }
+
+		@Override
+		public void display(GLAutoDrawable gLDrawable) {
+			// TODO Auto-generated method stub
+			final GL2 gl = gLDrawable.getGL().getGL2();
+
+			gl.glClearColor(0, 0, 0, 1);
+			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+			
+			// =============================================
+			// draw your content in this function
+			//
+			// =============================================
+	        // =============================================
+			
+			//GLUquadratic earth = glu.gluNewQuadric();
+			//glu.gluQuadraticDrawStyle
+			
+			// Animation
+			if( play )
+			{
+				earthOrbitAngle += earthAnimSpeed;
+				moonOrbitAngle -= moonAnimSpeed;
+			}
+			if( earthAnimSpeed < 0 )
+				switchDir = true;
+			if( earthAnimSpeed >= 0 )
+				switchDir = false;
+			// End Animation
+			
+			
+			// Camera Zoom
+			gl.glPushMatrix();
+			//gl.glScalef( camZoom, camZoom, 1 );
+			glu.gluLookAt( 0, 0, camZoom, 0, 0, -1, 0, 1, 0 );
+			
+			// Camera Rotate
+			//glu.gluLookAt(camX, camY, camZ, camLookX, camLookY, camLookZ, 0, 1, 0);
+			gl.glPushMatrix();
+			gl.glRotatef( camDiffX, 0, 1, 0 );
+			gl.glRotatef( camDiffY, 1, 0, 0);
+			
+			// Coordinate Lines
+			gl.glPushMatrix();
+			gl.glBegin( GL2.GL_LINES );
+			gl.glColor3f(1, 0, 0);
+			gl.glVertex3f( 0, 0, 0 );
+			gl.glVertex3f( 1.5f, 0, 0 );
+			gl.glColor3f(0, 1, 0);
+			gl.glVertex3f( 0, 0, 0 );
+			gl.glVertex3f( 0, 1.5f, 0 );
+			gl.glColor3f( 0, 0, 1 );
+			gl.glVertex3f( 0, 0, 0 );
+			gl.glVertex3f( 0, 0, 1.5f );
+			gl.glEnd();
+			gl.glPopMatrix();
+			
+			// Sun
+			float sunColor[] = { 1, 0.8f, 0.01f };
+			gl.glPushMatrix();
+			drawSphere( gl, sunRadius, sunColor );
+			gl.glPopMatrix();
+			// End Sun
+			
+			// Earth
+			float earthColor[] = { 0.2f, 0.5f, 0.5f };
+			gl.glPushMatrix();
+			gl.glRotatef( earthTiltAngle, 0, 0, 1);
+			drawOrbitLines( gl, earthOrbitRadius, earthOrbitAngle, earthColor, !switchDir );
+			gl.glTranslatef( getXCoord( earthOrbitAngle, earthOrbitRadius ), 0, getZCoord( earthOrbitAngle, earthOrbitRadius ) );
+			drawSphere( gl, earthRadius, earthColor );
+			
+			// Moon
+			float moonColor[] = { 0.5f, 0.5f, 0.45f };
+			gl.glPushMatrix();
+			gl.glRotatef( moonTiltAngle * 2,  0,  0,  1);
+			drawOrbitLines( gl, moonOrbitRadius, moonOrbitAngle, moonColor, switchDir );
+			gl.glTranslatef( getXCoord( moonOrbitAngle, moonOrbitRadius ), 0, getZCoord( moonOrbitAngle, moonOrbitRadius ) );
+			drawSphere( gl, moonRadius, moonColor );
+			gl.glPopMatrix();
+			// End Moon
+			
+			gl.glPopMatrix();
+			// End Earth
+			
+			gl.glPopMatrix();
+			// End Camera Zoom
+
+			gl.glPopMatrix();
+			// End Camera Rotate
+
+		}
+
+		@Override
+		public void dispose(GLAutoDrawable arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+
+		@Override
+		public void keyTyped(KeyEvent e) {
+			// TODO Auto-generated method stub
+		    char key= e.getKeyChar();
+			//System.out.printf("Key typed: %c\n", key);
+			
+			// If user hits t, play/stop animation.
+			if( key == 't')
+			{
+				play = !play;
+			}
+			if( key == 's')
+			{
+				earthAnimSpeed -= 0.05;
+				moonAnimSpeed -= 0.5;
+			}
+			if( key == 'f')
+			{
+				earthAnimSpeed += 0.05;
+				moonAnimSpeed += 0.5;
+			}
+		}
+		
+		
+
+		@Override
+		public void keyPressed(KeyEvent e) {
+			// TODO Auto-generated method stub
+						
+		}
+
+		@Override
+		public void keyReleased(KeyEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+		
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			
+			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			
+			if( mButton == 1) // Right Button for rotation
+			{
+				camDiffX = ( XX - mouseStartX ) * 4 + camDiffXOld;
+				camDiffY = ( mouseStartY - YY ) * 4 + camDiffYOld;
+				
+				//camY = (float)Math.sin(camDiffY) * camRadius;
+				//float t = (float)Math.cos(camDiffY) * camRadius;
+				//camX = (float)Math.cos(camDiffX) * t;
+				//camZ = (float)Math.sin(camDiffX) * t;
+			}
+			if( mButton == -1 )
+			{
+				camZoom = ( mouseStartX - XX ) / 5 + camZoomOld;
+				if( camZoom < 0.1f )
+					camZoom = 0.1f;
+				if( camZoom > 50 )
+					camZoom = 50;
+			}
+		}
+		
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			/*
+			 * Coordinates printout
+			 */
+			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			//System.out.printf("WindowWidth: %d", windowWidth);
+			//System.out.printf("Point clicked: (%.3f, %.3f)\n", XX, YY);
+			
+			mouseStartX = XX;
+			mouseStartY = YY;
+		
+			mouseX0 = e.getX();
+			mouseY0 = e.getY();
+			if(e.getButton()==MouseEvent.BUTTON1) // Left button
+			{
+				mButton = -1;
+			}
+			else if(e.getButton()==MouseEvent.BUTTON3) // Right button
+			{
+				mButton = 1;
+			}
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			mButton = 0;
+			camDiffXOld = camDiffX;
+			camDiffYOld = camDiffY;
+			camZoomOld = camZoom;
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+	  /*  
+	public void init(GLDrawable gLDrawable) {
+		final GL gl = glDrawable.getGL();
+        final GLU glu = glDrawable.getGLU();
+
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-1.0f, 1.0f, -1.0f, 1.0f); // drawing square
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glLoadIdentity();
+    }*/
+	
+}

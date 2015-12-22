@@ -1,0 +1,5 @@
+
+add 0x1, 0x18, m5
+sll m5, 0x1, m6
+printchars m6, 0, 0
+print m6, 0, 0

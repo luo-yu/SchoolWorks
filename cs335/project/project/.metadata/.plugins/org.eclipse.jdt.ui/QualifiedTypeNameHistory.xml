@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="com.jogamp.opengl.fixedfunc.GLMatrixFunc"/>
+<fullyQualifiedTypeName name="org.lwjgl.opengl.GL15"/>
+<fullyQualifiedTypeName name="objload.com.momchil_atanasov.data.front.parser.OBJObject"/>
+<fullyQualifiedTypeName name="objload.com.momchil_atanasov.data.front.parser.OBJMesh"/>
+<fullyQualifiedTypeName name="objload.com.momchil_atanasov.data.front.parser.OBJFace"/>
+<fullyQualifiedTypeName name="com.jogamp.opengl.util.awt.TextRenderer"/>
+</qualifiedTypeNameHistroy>

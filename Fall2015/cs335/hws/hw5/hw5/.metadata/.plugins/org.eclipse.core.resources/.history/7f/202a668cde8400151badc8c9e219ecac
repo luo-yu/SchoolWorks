@@ -1,0 +1,671 @@
+package helloOpenGL;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.awt.image.DataBufferByte; 
+//import com.sun.opengl.util.BufferUtil;
+
+
+
+
+
+
+
+
+import java.nio.ByteOrder;
+import java.util.Hashtable;
+
+import javax.imageio.ImageIO;
+import com.jogamp.opengl.*;
+import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.glu.GLUquadric;
+
+import com.jogamp.opengl.util.awt.TextRenderer;
+
+public class JoglEventListener implements GLEventListener, KeyListener, MouseListener, MouseMotionListener {
+	
+	
+	float backrgb[] = new float[4]; 
+	float rot; 
+	float rotX; 
+
+	/*
+	 * Custom variables for mouse drag operations 
+	 */
+	int windowWidth, windowHeight;
+	float orthoX=40;
+	float tVal_x, tVal_y, rVal_x, rVal_y, rVal;
+	double rtMat[] = new double[16];
+	float mouseX0, mouseY0;
+	int saveRTnow=0, mouseDragButton=0;
+	GLUquadric earth;
+	
+	
+	int texID[]  = new int[6];
+	int myId;
+	//BufferedImage images[] = new BufferedImage[6];
+	//BufferedImage[] images = new BufferedImage[6];
+	BufferedImage image0,image1,image2,image3,image4,image5, myImage;
+	ByteBuffer buf0, buf1,buf2,buf3,buf4,buf5, myBuff;
+	
+	
+	
+	
+	
+	 // Define camera variables
+    float pane = 0.0f, cameraSpeed = 0.0f, elevation = 0.0f;
+    // Set camera at (0, 0, -20)
+    float eyeX = 0.0f, eyeY = 5.0f, eyeZ = 0.0f;
+    // Set camera orientation
+    float cameraUpx = 0.0f, cameraUpy = 1.0f, cameraUpz = 0.0f;
+
+    float forward,back,left,right = 0;
+    float stepDirections[] = new float[3];
+    float userPos[] = {0,0,0}; 
+	boolean exitLeft, exitRight, exitTop, exitBott = false;
+	
+    private GLU glu = new GLU();
+
+    
+	 public void displayChanged(GLAutoDrawable gLDrawable, 
+	            boolean modeChanged, boolean deviceChanged) {
+	    }
+
+	    /** Called by the drawable immediately after the OpenGL context is
+	     * initialized for the first time. Can be used to perform one-time OpenGL
+	     * initialization such as setup of lights and display lists.
+	     * @param gLDrawable The GLAutoDrawable object.
+	     */
+	    public void init(GLAutoDrawable gLDrawable) {
+	        GL2 gl = gLDrawable.getGL().getGL2();
+	        //gl.glShadeModel(GL.GL_LINE_SMOOTH);              // Enable Smooth Shading
+	        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);    // Black Background
+	        //gl.glClearDepth(1.0f);                      // Depth Buffer Setup
+	        gl.glEnable(GL.GL_DEPTH_TEST);              // Enables Depth Testing
+	        //gl.glDepthFunc(GL.GL_LEQUAL);               // The Type Of Depth Testing To Do
+	        // Really Nice Perspective Calculations
+	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
+
+	       
+	        gl.glMatrixMode(GL2.GL_MODELVIEW);
+	        gl.glLoadIdentity();
+	        gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, rtMat, 0);
+	        
+	    	
+	        // load an image; 
+	        try {
+
+		        	image0 = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\cam0.jpg"));
+		        	buf0 = convertImageData(image0); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            texID[0] = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, texID[0]);
+
+		        	image1 = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\camo1.jpg"));
+		        	buf1 = convertImageData(image1); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            texID[1] = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, texID[1]);
+		            
+		        	image2 = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\camo2.jpg"));
+		        	buf2 = convertImageData(image2); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            texID[2] = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, texID[2]);	            
+		            
+		            
+		        	image3 = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\camo3.jpg"));
+		        	buf3 = convertImageData(image3); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            texID[3] = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, texID[3]);
+		            
+		            
+		        	image4 = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\camo4.jpg"));
+		        	buf4 = convertImageData(image4); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            texID[4] = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, texID[4]);
+
+
+		        	image5 = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\camo5.jpg"));
+		        	buf5 = convertImageData(image5); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            texID[5] = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, texID[5]);
+		            
+		        	myImage = ImageIO.read(new File("C:\\Users\\Judy\\Desktop\\Tristand\\brick.jpg"));
+		        	myBuff = convertImageData(myImage); //the data
+		            gl.glEnable(GL.GL_TEXTURE_2D);
+		            myId = genTexture(gl);
+		            gl.glBindTexture(GL.GL_TEXTURE_2D, myId);
+		            
+		            
+		            gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image0.getWidth(), image0.getHeight(), 0, 
+		            		GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf0);
+		               
+		            ///going to use bilinear interpolation to determine what the color is between two pixels on a texture
+		            gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
+		            gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+	        	
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}  
+	    }
+
+public void drawObject(final GL2 gl) {
+
+		    gl.glEnd();
+		    gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, myImage.getWidth(), myImage.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, myBuff);    
+		    gl.glBegin(GL2.GL_QUADS);    	
+	        
+	    	// on the XY plane
+	    	// front plane
+	         gl.glNormal3f(0,  0, 1);
+	         //gl.glColor3f(1, 0, 0);
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(30, 1, 0); 
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(40, 1, 0);
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(40, 5, 0); 
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(30, 5, 0);
+
+	         // back plane
+	         gl.glNormal3f(0,  0, -1);
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(30, 5, -10); 
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(40, 5, -10);
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(40, 1, -10); 
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(30, 1, -10);
+
+	         // on the YZ plane
+	         // left plane 
+	         gl.glNormal3f(-1,  0, 0);
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(30, 5, 0); 
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(30, 1, 0);
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(30, 1, -10); 
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(30, 5, -10);
+
+	         // right plane
+	         gl.glNormal3f(1,  0, 0);
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(40, 5, 0); 
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(40, 5, -10);
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(40, 1, -10); 
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(40, 1, 0);
+
+	         // on the XZ plane,  
+	         // up plane; 
+	         gl.glNormal3f(0,  1, 0);
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(30, 5, 0); 
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(30, 5, -10);
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(40, 5, -10); 
+	         gl.glTexCoord2f(0+0.2f, 1-(0 + 0.2f));
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(40, 5, 0);
+	         
+	         gl.glEnd(); 
+	    }
+
+
+	    public void drawCube(final GL2 gl) {
+	    	
+    		
+
+	        gl.glEnd();
+	        gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image2.getWidth(), image2.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf2);    
+	        gl.glBegin(GL2.GL_QUADS);	    	
+	        
+	    	// on the XY plane
+	    	// front plane
+	         gl.glNormal3f(0,  0, 1);
+	         //gl.glColor3f(1, 0, 0);
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(-100, 0, 100); 
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(100, 0, 100);
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(100, 50, 100); 
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(-100, 50, 100);
+
+	        gl.glEnd();
+	        gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image0.getWidth(), image0.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf0);    
+	        gl.glBegin(GL2.GL_QUADS);
+	         // back plane
+	         gl.glNormal3f(0,  0, -1);
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(-100, 0, -100); 
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(100, 0, -100);
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(100, 50, -100); 
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(-100, 50, -100);
+
+	        gl.glEnd();
+	        gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image3.getWidth(), image3.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf3);    
+	        gl.glBegin(GL2.GL_QUADS);
+	         // on the YZ plane
+	         // left plane 
+	         gl.glNormal3f(-1,  0, 0);
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(-100, 0, 100); 
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(-100, 50, 100);
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(-100, 50, -100); 
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(-100, 0, -100);
+
+	         // right plane
+	        gl.glEnd();
+	        gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image4.getWidth(), image4.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf4);    
+	        gl.glBegin(GL2.GL_QUADS);	         
+	         gl.glNormal3f(1,  0, 0);
+	         
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(100, 0, 100); 
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(100, 50, 100);
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(100, 50, -100); 
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(100, 0, -100);
+
+	         gl.glEnd();
+	         gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image5.getWidth(), image5.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf5);      
+	         gl.glBegin(GL2.GL_QUADS);	
+	         // on the XZ plane,  
+	         // up plane; 
+	         gl.glNormal3f(0,  1, 0);
+
+	         gl.glTexCoord2f(1.0f, 0.0f);
+	         gl.glVertex3f(-100, 50, 100); 
+
+	         gl.glTexCoord2f(1.0f, 1.0f);
+	         gl.glVertex3f(100, 50, 100);
+
+	         gl.glTexCoord2f(0.0f, 1.0f);
+	         gl.glVertex3f(100, 50, -100); 
+	         //gl.glTexCoord2f(0+0.2f, 1-(0 + 0.2f));
+
+	         gl.glTexCoord2f(0.0f, 0.0f);
+	         gl.glVertex3f(-100, 50, -100);
+
+	         gl.glEnd(); 
+	    }
+	    
+	    
+	public void drawGround(final GL2 gl) {	    
+	        // down plane; 
+	       gl.glEnd();
+	       gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, image1.getWidth(), image1.getHeight(), 0, GL2.GL_BGR, GL.GL_UNSIGNED_BYTE, buf1);    
+	       gl.glBegin(GL2.GL_QUADS);
+	        gl.glNormal3f(0,  -1, 0);
+	        gl.glTexCoord2f(0.0f, 1.0f);
+	        gl.glVertex3f(-1000, 0, 1000); 
+	        gl.glTexCoord2f(0.0f, 0.0f);
+	        gl.glVertex3f(1000, 0, 1000);
+	        gl.glTexCoord2f(1.0f, 0.0f);
+	        gl.glVertex3f(1000, 0, -1000); 
+	        gl.glTexCoord2f(1.0f, 1.0f);
+	        gl.glVertex3f(-1000, 0, -1000);
+	        
+	        gl.glEnd();
+	}
+		@Override
+		public void display(GLAutoDrawable gLDrawable) {
+			// TODO Auto-generated method stub
+			final GL2 gl = gLDrawable.getGL().getGL2();
+
+			if(exitLeft)
+				pane -= 3 ;
+			if(exitRight)
+				pane += 3 ;
+			if(exitTop)
+				elevation -= 3 ;
+			if(exitBott)
+				elevation += 3 ;
+			
+			
+			//gl.glClearColor(backrgb[0], 0, 1, 1);
+			gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
+			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+
+			gl.glLoadIdentity();
+
+			stepDirections = aimEye(gl, glu);
+			drawCube(gl);
+			
+			//System.out.printf("eye at %f %f %f \n", eyeX , eyeY ,eyeZ );
+			//System.out.printf("looking at %f %f %f \n", eyeX + stepDirections[0], eyeY + stepDirections[1],eyeZ + stepDirections[2]);
+			
+			
+			float[] tmp;
+			if (forward != 0){
+				tmp = takeStep(false);
+				gl.glTranslatef(userPos[0]-tmp[0], 0,userPos[2]-tmp[2]);
+				if (stepDirections[0] > 0 ){
+					userPos[0] -= tmp[0];
+					userPos[2] -= tmp[2];
+				}
+				else{
+					userPos[0] += tmp[0];
+					userPos[2] += tmp[2];
+				}
+			}
+			else if (back != 0){
+				tmp = takeStep(false);
+				gl.glTranslatef(userPos[0]+tmp[0], 0,userPos[2]+tmp[2]);
+				if (stepDirections[0] > 0 ){
+					userPos[0] += tmp[0];
+					userPos[2] += tmp[2];
+				}
+				else{
+					userPos[0] -= tmp[0];
+					userPos[2] -= tmp[2];
+				}
+			}
+			else if (left != 0){
+				tmp = takeStep(true);
+				gl.glTranslatef(userPos[0]+tmp[0], 0,userPos[2]+tmp[2]);
+				if (stepDirections[2] > 0 ){
+					userPos[0] -= tmp[0];
+					userPos[2] -= tmp[2];
+				}
+				else{
+					userPos[0] += tmp[0];
+					userPos[2] += tmp[2];
+				}
+			}
+			else if (right != 0){
+				tmp = takeStep(true);
+				gl.glTranslatef(userPos[0]+tmp[0], 0,userPos[2]+tmp[2]);
+				if (stepDirections[2] < 0 ){
+					userPos[0] -= tmp[0];
+					userPos[2] -= tmp[2];
+				}
+				else{
+					userPos[0] += tmp[0];
+					userPos[2] += tmp[2];
+				}
+			}
+			else{
+				gl.glTranslatef(userPos[0], 0,userPos[2]);
+			}
+
+
+			// the scene:
+			drawObject(gl); 
+			drawGround(gl);
+			
+		}
+
+    public float[] aimEye(GL2 gl, GLU glu)
+    {
+    	gl.glLoadIdentity();
+
+    	float[] tmp = polarToCartesian(pane, 100.0f, elevation);
+    	float[] camUp = polarToCartesian(pane, 100.0f, elevation + 90);
+    	cameraUpx = camUp[0];
+    	cameraUpy = camUp[1];
+    	cameraUpz = camUp[2];
+    	glu.gluLookAt(eyeX, eyeY, eyeZ,
+    			eyeX + tmp[0], eyeY + tmp[1],eyeZ + tmp[2],
+    			cameraUpx, cameraUpy, cameraUpz);
+    	
+    	return tmp;
+    }
+
+    private float[] polarToCartesian (float azimuth, float length, float altitude)
+    {
+    	float[] result = new float[3];
+    	float x, y, z;
+    	float theta = (float)Math.toRadians(90 - azimuth);
+    	float tantheta = (float) Math.tan(theta);
+    	float radian_alt = (float)Math.toRadians(altitude);
+    	float cospsi = (float) Math.cos(radian_alt);
+    	x = (float) Math.sqrt((length * length) / (tantheta * tantheta + 1));
+    	z = tantheta * x;
+    	x = -x;
+    	if ((azimuth >= 180.0 && azimuth <= 360.0) || azimuth == 0.0f) {
+    		x = -x;
+    		z = -z;
+    	}
+    	y = (float) (Math.sqrt(z * z + x * x) * Math.sin(radian_alt));
+    	
+    	if (length < 0) {
+    		x = -x;
+    		z = -z;
+    		y = -y;
+    	}
+    	x = x * cospsi;
+    	z = z * cospsi;
+   
+    	result[0] = x;
+    	result[1] = y;
+    	result[2] = z;
+    	
+    	return result;
+    }
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		
+		float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+		float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+		
+		if ( (XX - Float.parseFloat(String.format("%.1f", mouseX0))) < 0)
+			pane -= 1 ;
+		else
+			pane += 1 ;
+		
+		if ( (YY - Float.parseFloat(String.format("%.1f", mouseY0))) < 0)
+			elevation -= 1 ;
+		else
+			elevation += 1 ;
+
+		//System.out.printf("windowWidth %f  \n", (windowHeight*0.5f)*orthoX/windowWidth); 
+		//System.out.printf("mouse left at %f %f \n", XX, YY); 
+		
+		if ( (int)XX == (int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitRight = true;
+		else if ( (int)XX == -(int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitLeft = true;
+		else if ( (int)YY == -(int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitTop = true;
+		else if ( (int)YY ==  (int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitBott = true;
+		else
+			
+		
+		if ( (int)XX > (int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitRight = false;
+		if ( (int)XX > -(int)(windowWidth*0.5f)*orthoX/windowWidth) 
+			exitLeft = false;
+		if ( (int)YY < -(int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitTop = false;
+		if ( (int)YY <  (int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitBott = false;
+		
+		
+    	if (pane > 359)
+    		pane = 1;
+    		
+    	if (pane < 1)
+    		pane = 359;
+
+		mouseX0 = XX; 
+		mouseY0 = YY;
+
+
+	}
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+		float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+		
+		if ( (int)XX == (int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving right
+			exitRight = true;
+		else if ( (int)XX == -(int)(windowWidth*0.5f)*orthoX/windowWidth) //mouse moving left
+			exitLeft = true;
+		else if ( (int)YY == -(int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitTop = true;
+		else if ( (int)YY ==  (int)((windowHeight*0.5f)*orthoX/windowWidth))
+			exitBott = true;
+		else
+
+
+    	if (pane > 359)
+    		pane = 1;
+    		
+    	if (pane < 1)
+    		pane = 359;
+		
+	}
+
+    public float[] takeStep(boolean stepSideways){
+    	float slope;
+    	if (!stepSideways)
+    		slope = (eyeZ + stepDirections[2]) / (eyeX + stepDirections[0]);
+    	else
+    		slope = -(eyeZ + stepDirections[0]) / (eyeX + stepDirections[2]);
+    	
+    	float stepSize = 0.5f;
+    	
+    	float x = (float) Math.sqrt( (float)Math.pow(stepSize, 2) / (1.0 + (float)Math.pow(slope, 2) ) );
+    	float z = slope*x;
+    	
+    	float[] result = new float[3];
+    	result[0] = x;
+    	result[1] = 0;
+    	result[2] = z;
+    	return result;
+    }
+    
+    public void keyPressed(KeyEvent event)
+    { 
+    	if (event.getKeyCode()== KeyEvent.VK_W) 
+    		forward =1;
+    	if (event.getKeyCode()== KeyEvent.VK_S) 
+    		back =1;
+    	if (event.getKeyCode()== KeyEvent.VK_D) 
+    		right =1;
+    	if (event.getKeyCode()== KeyEvent.VK_A) 
+    		left = 1;
+    }	   
+    
+    
+    
+    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, 
+            int height) {
+    	windowWidth = width;
+    	windowHeight = height;
+        final GL2 gl = gLDrawable.getGL().getGL2();
+
+        if (height <= 0) // avoid a divide by zero error!
+            height = 1;
+        final float h = (float) width / (float) height;
+        gl.glViewport(0, 0, width, height);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glLoadIdentity();
+        //gl.glOrtho(-orthoX*0.5, orthoX*0.5, -orthoX*0.5*height/width, orthoX*0.5*height/width, -100, 100);
+        glu.gluPerspective(45.0f, h, 1.0, 200.0);
+        
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        glu.gluLookAt(0, 0, 6, 0, 0, 0, 0, 1, 0);
+    }
+    
+ 
+ 
+    private int genTexture(GL gl) {
+        final int[] tmp = new int[1];
+        gl.glGenTextures(1, tmp, 0);
+        return tmp[0];
+    }
+    
+    
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+	}    
+    
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		exitRight = exitLeft = exitTop = exitBott =false;
+	}
+	
+    private ByteBuffer convertImageData(BufferedImage bufferedImage) {
+        ByteBuffer imageBuffer; 
+        DataBuffer buf = bufferedImage.getRaster().getDataBuffer();    
+        final byte[] data = ((DataBufferByte) buf).getData();        
+        return (ByteBuffer.wrap(data)); 
+    }
+	@Override
+	public void dispose(GLAutoDrawable arg0) {
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+	    char key= e.getKeyChar();
+		System.out.printf("Key typed: %c\n", key); 	
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		cameraSpeed = 0;
+		forward = back = left = right=0;
+	}
+
+    
+}
+
+
+
